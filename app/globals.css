@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+/* --- kaisermann.me–aligned design tokens (fonts differ: VT323 ≈ VCR OSD Mono, OFL) --- */
+:root {
+  --text-primary: #a0a0a0;
+  --text-secondary: #fff;
+  --glitchy-blue: rgba(2, 183, 182, 0.4);
+  --glitchy-red: rgba(183, 2, 2, 0.4);
+  --font-size-primary: clamp(16px, 1.8vw, 34px);
+  --font-size-secondary: clamp(24px, 4.6vw, 63px);
+  --line-height: 1.4;
+  --container-width: 80%;
+  --page-width: min(80%, 72rem);
+  --bio-font-size: var(--font-size-secondary);
+  --bio-line-height: 1.35;
+}
+
+@theme inline {
+  --color-background: #000000;
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-vcr), ui-monospace, monospace;
+  --font-mono: var(--font-vcr), ui-monospace, monospace;
+}
+
+html {
+  font-family: var(--font-vcr), ui-monospace, monospace;
+  font-weight: 400;
+  font-size: var(--font-size-primary);
+  line-height: var(--line-height);
+  color: var(--text-primary);
+  background-color: #000;
+}
+
+body {
+  background: #000;
+  color: var(--text-primary);
+  font-family: inherit;
+  cursor: url("/assets/images/cursor-default.png") 2 2, auto;
+}
+
+a,
+button,
+[role="button"] {
+  cursor: url("/assets/images/cursor-pointer.png") 16 8, pointer;
+}
+
+.has-custom-cursor,
+.has-custom-cursor * {
+  cursor: none !important;
+}
+
+::selection {
+  background-color: #fff;
+  color: #000;
+}
+
+/* thin scrollbar like reference */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #28272a transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 3px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #28272a;
+}
+
+.glitchy-text {
+  --shadow-x-distance: 2px;
+  --shadow-y-distance: 1px;
+  text-shadow:
+    var(--shadow-x-distance) var(--shadow-y-distance) 0 var(--glitchy-blue),
+    calc(var(--shadow-x-distance) * -1) calc(var(--shadow-y-distance) * -1) 0 var(--glitchy-red);
+}
+
+@media (min-width: 481px) {
+  .glitchy-text {
+    --shadow-x-distance: 3px;
+    --shadow-y-distance: 2px;
+  }
+}
+
+@media (min-width: 960px) {
+  .glitchy-text {
+    --shadow-x-distance: 4px;
+    --shadow-y-distance: 3px;
+  }
+}
+
+.crt-body {
+  font-size: var(--bio-font-size);
+  line-height: var(--bio-line-height);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  max-width: 100%;
+}
+
+.crt-body p,
+.crt-body [role="paragraph"] {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-wrap: pretty;
+  hyphens: manual;
+}
+
+@media (max-width: 480px) {
+  :root {
+    --font-size-secondary: clamp(18px, 5.4vw, 40px);
+    --bio-line-height: 1.42;
+  }
+}
+
+.crt-chrome {
+  color: var(--text-secondary);
+}
+
+.crt-scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 6px,
+    rgba(255, 255, 255, 0.03) 6px 12px
+  );
+}
+
+.crt-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  animation: crt-noise-shift 0.8s steps(3) infinite;
+}
+
+.crt-vignette {
+  background: radial-gradient(circle, transparent 60%, rgba(0, 0, 0, 1) 100%);
+  pointer-events: none;
+}
+
+@keyframes crt-noise-shift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  33% {
+    transform: translate3d(-2%, 1%, 0);
+  }
+  66% {
+    transform: translate3d(1%, -1%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 关键词背后彩条：真实视频（mp4/mov），在 `.crt-keyword` 内、文字下层 */
+.crt-keyword-bars-video {
+  mix-blend-mode: screen;
+  filter: brightness(0.5) saturate(1.25) contrast(1.18);
+  animation: bars-jitter 0.08s steps(2) infinite;
+}
+
+.crt-keyword-bars-wrap {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .crt-keyword:hover .crt-keyword-bars-wrap,
+  .crt-keyword:focus-visible .crt-keyword-bars-wrap {
+    opacity: 1;
+  }
+}
+
+@keyframes bars-jitter {
+  0% {
+    transform: translate3d(-3%, 0, 0) scale(1.06);
+  }
+  50% {
+    transform: translate3d(2%, 0, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(-2%, 0, 0) scale(1.08);
+  }
+}
+
+.custom-cursor {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  width: 40px;
+  transform: translate3d(-9999px, -9999px, 0);
+  will-change: transform;
+}
+
+.custom-cursor.is-interactive {
+  width: 40px;
+}
