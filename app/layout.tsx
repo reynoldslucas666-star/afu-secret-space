@@ -11,8 +11,8 @@ const vcrLike = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "Afu Archive — Liu Nengfu",
-  description: "VHS/CRT portfolio — filmmaker & AIGC product intern at the Beijing Film Academy.",
+  title: "Afu's secret space",
+  description: "VHS/CRT portfolio — Liu Nengfu (Afu), filmmaker & AIGC product intern at the Beijing Film Academy.",
 };
 
 export default function RootLayout({

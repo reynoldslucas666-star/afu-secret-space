@@ -184,7 +184,7 @@ export default function Portfolio() {
         <div className="pointer-events-auto sticky top-0 z-[6] flex flex-col gap-5 px-[clamp(1rem,5vw,3rem)] pb-3 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8 sm:pb-4 sm:pt-8">
           <nav className="flex flex-1 flex-col gap-4 sm:max-w-[55%]" aria-label="Primary">
             <ul className="flex list-none items-center gap-0 font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">
-              <li className="flex items-center after:ml-[0.5ch] after:text-[1.15em] after:content-['▶']">AFU</li>
+              <li className="normal-case flex items-center after:ml-[0.5ch] after:text-[1.15em] after:content-['▶']">{"Afu's secret space"}</li>
             </ul>
             <ul className="flex list-none flex-col gap-2 sm:flex-row sm:gap-6">
               <li><a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#content">ARCHIVE_01</a></li>
