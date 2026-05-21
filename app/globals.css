@@ -16,10 +16,29 @@
   --font-active: var(--font-vcr), ui-monospace, monospace;
 }
 
-/* Replace --font-zh in this rule when you drop in a custom Chinese pixel font. */
+/* Chinese: FZ pixel for CJK only; Latin/numbers fall through to VT323 (--font-vcr). */
+@font-face {
+  font-family: "FZ Xiangsu CJK";
+  src: url("/fonts/FZXIANGSU12.ttf") format("truetype");
+  font-display: swap;
+  unicode-range:
+    U+2E80-2EFF,
+    U+3000-303F,
+    U+31C0-31EF,
+    U+3400-4DBF,
+    U+4E00-9FFF,
+    U+F900-FAFF,
+    U+FF00-FFEF;
+}
+
 html[data-locale="zh"] {
-  --font-active: var(--font-zh), "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-active: "FZ Xiangsu CJK", var(--font-vcr), ui-monospace, monospace;
   --bio-line-height: 1.45;
+}
+
+/* Explicit Latin tokens in Chinese UI (optional hooks share VT323). */
+html[data-locale="zh"] .crt-latin {
+  font-family: var(--font-vcr), ui-monospace, monospace;
 }
 
 @theme inline {

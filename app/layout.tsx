@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import { VT323 } from "next/font/google";
 import "./globals.css";
 
@@ -8,13 +7,6 @@ const vcrLike = VT323({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-vcr",
-  display: "swap",
-});
-
-/** Chinese pixel font — FZXIANGSU12 (方正像素12). */
-const fontZh = localFont({
-  src: "../public/fonts/FZXIANGSU12.ttf",
-  variable: "--font-zh",
   display: "swap",
 });
 
@@ -30,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${vcrLike.variable} ${fontZh.variable} h-full`}>
+    <html lang="en" className={`${vcrLike.variable} h-full`}>
       <body className="min-h-dvh overflow-x-hidden antialiased">{children}</body>
     </html>
   );
