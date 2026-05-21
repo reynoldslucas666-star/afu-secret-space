@@ -66,6 +66,36 @@ function channelForCtr(ctrId: string): ChannelIndex {
   return CTR_CHANNEL_BY_ID[ctrId as CtrId] ?? 1;
 }
 
+/** Channel order for tuner prev/next (01 → 10, wraps). */
+const CTR_TUNER = [
+  { ctrId: "name", channel: 1, target: { kind: "video", src: CTR_VID.liunengfu } },
+  { ctrId: "aigc-intern", channel: 2, target: { kind: "video", src: CTR_VID.aigcIntern } },
+  { ctrId: "live-music", channel: 3, target: { kind: "video", src: CTR_VID.yanchu } },
+  { ctrId: "films", channel: 4, target: { kind: "video", src: CTR_VID.dianying } },
+  { ctrId: "exhibitions", channel: 5, target: { kind: "video", src: CTR_VID.zhanlan } },
+  { ctrId: "travel", channel: 6, target: { kind: "video", src: CTR_VID.lvxing } },
+  { ctrId: "vid-aigc", channel: 7, target: { kind: "background", key: "aigc" } },
+  { ctrId: "vid-live", channel: 8, target: { kind: "background", key: "live" } },
+  { ctrId: "vid-theatrical", channel: 9, target: { kind: "background", key: "theatrical" } },
+  { ctrId: "contact", channel: 10, target: "contact" },
+] as const satisfies ReadonlyArray<{
+  ctrId: CtrId;
+  channel: ChannelIndex;
+  target: CtrMedia | "contact";
+}>;
+
+const TUNER_CHANNEL_MAX = CTR_TUNER.length;
+
+function wrapChannel(n: number): ChannelIndex {
+  if (n < 1) return TUNER_CHANNEL_MAX as ChannelIndex;
+  if (n > TUNER_CHANNEL_MAX) return 1;
+  return n as ChannelIndex;
+}
+
+function tunerEntryForChannel(ch: ChannelIndex) {
+  return CTR_TUNER.find((e) => e.channel === ch);
+}
+
 /** CTR target: image, fullscreen video (replaces png), or background feature reel. */
 export type CtrMedia =
   | { kind: "image"; src: string }
@@ -248,6 +278,31 @@ export default function Portfolio() {
     setChannel(0);
   }, [activeCtrId, contactOpen, isTransitioning]);
 
+  const stepChannel = useCallback(
+    (delta: -1 | 1) => {
+      if (isTransitioning) return;
+
+      const current =
+        contactOpen ? 10 : channel > 0 ? channel : delta === 1 ? 0 : TUNER_CHANNEL_MAX + 1;
+      const next = wrapChannel(current + delta);
+      const entry = tunerEntryForChannel(next);
+      if (!entry) return;
+
+      const onSame =
+        activeCtrId === entry.ctrId &&
+        (entry.target === "contact" ? contactOpen : !contactOpen && activeMedia !== null);
+      if (onSame) return;
+
+      startTransition({
+        action: "open",
+        ctrId: entry.ctrId,
+        channel: entry.channel,
+        target: entry.target,
+      });
+    },
+    [activeCtrId, activeMedia, channel, contactOpen, isTransitioning, startTransition],
+  );
+
   const handleGlobalClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target !== e.currentTarget) return;
     dismissToDefault();
@@ -428,7 +483,25 @@ export default function Portfolio() {
           <div className="glitchy-text flex flex-col items-start gap-2 text-right sm:items-end">
             <div className="max-w-[22rem] font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">{hudTime}</div>
             <div className="flex items-center gap-2 font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">
-              <span>CHANNEL {formatChannel(channel)}</span>
+              <button
+                type="button"
+                aria-label="Previous channel"
+                disabled={isTransitioning}
+                className="channel-step-btn flex h-8 min-w-8 items-center justify-center border border-[var(--text-secondary)]/50 bg-black/30 px-1 text-sm leading-none text-[var(--text-secondary)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] disabled:opacity-40"
+                onClick={() => stepChannel(-1)}
+              >
+                ◀
+              </button>
+              <span className="min-w-[7.5ch] tabular-nums">CHANNEL {formatChannel(channel)}</span>
+              <button
+                type="button"
+                aria-label="Next channel"
+                disabled={isTransitioning}
+                className="channel-step-btn flex h-8 min-w-8 items-center justify-center border border-[var(--text-secondary)]/50 bg-black/30 px-1 text-sm leading-none text-[var(--text-secondary)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] disabled:opacity-40"
+                onClick={() => stepChannel(1)}
+              >
+                ▶
+              </button>
             </div>
           </div>
         </div>
