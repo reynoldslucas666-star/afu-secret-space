@@ -157,7 +157,9 @@ export default function Portfolio() {
   const [activeCtrId, setActiveCtrId] = useState<string | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [hudTime, setHudTime] = useState("");
+  const [hudDate, setHudDate] = useState("");
+  const [hudSession, setHudSession] = useState("");
+  const sessionStartRef = useRef(Date.now());
   const [useCustomCursor, setUseCustomCursor] = useState(false);
   const [cursorState, setCursorState] = useState({ x: 0, y: 0, visible: false, interactive: false });
   const [channel, setChannel] = useState(0);
@@ -377,10 +379,26 @@ export default function Portfolio() {
 
   useEffect(() => {
     const tick = () => {
-      setHudTime(new Date().toLocaleString("en-US", {
-        weekday: "short", month: "short", day: "2-digit", year: "numeric",
-        hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
-      }).toUpperCase());
+      setHudDate(
+        new Date().toLocaleString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).toUpperCase(),
+      );
+      const elapsed = Math.max(0, Date.now() - sessionStartRef.current);
+      const totalSec = Math.floor(elapsed / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      setHudSession(
+        `-${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`,
+      );
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -540,42 +558,44 @@ export default function Portfolio() {
       <div className="pointer-events-none fixed inset-0 z-[4] crt-vignette" />
 
       <div className="relative z-[5] flex min-h-dvh flex-col">
-      <header className="pointer-events-none min-h-0 uppercase tracking-wide text-[var(--text-secondary)] sm:min-h-[min(14vh,7rem)]">
-        <div className="pointer-events-auto sticky top-0 z-[6] flex flex-col gap-3 px-[clamp(0.5rem,2.5vw,1.5rem)] pb-2 pt-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:pb-2 sm:pt-4">
-          <nav className="flex flex-1 flex-col gap-2 sm:max-w-[55%]" aria-label="Primary">
-            <ul className="crt-chrome crt-chrome-en flex list-none flex-col gap-2 font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
-              <li className="normal-case">{ui.welcomeTo}</li>
-              <li className="normal-case">{ui.siteTitle}</li>
-            </ul>
-            <ul className="crt-chrome-en glitchy-text flex list-none flex-col gap-2 sm:flex-row sm:gap-6">
-              <li>
-                <a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#content">
-                  {ui.archive}
-                </a>
-              </li>
-              <li>
-                <a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#footer">
-                  {ui.directory}
-                </a>
-              </li>
-            </ul>
+      <header className="pointer-events-none min-h-0 uppercase tracking-wide text-[var(--text-secondary)]">
+        <div className="crt-header-chrome crt-chrome-en pointer-events-auto sticky top-0 z-[6] px-[var(--layout-edge-x)] pb-0 pt-[var(--layout-chrome-top)]">
+          <nav className="crt-header-col flex-1 sm:max-w-[55%]" aria-label="Primary">
+            <div className="crt-chrome-row normal-case font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
+              {ui.welcomeTo}
+            </div>
+            <div className="crt-chrome-row normal-case font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
+              {ui.siteTitle}
+            </div>
+            <div className="crt-chrome-row glitchy-text gap-[1.5em] font-[family-name:var(--font-active)]">
+              <a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#content">
+                {ui.archive}
+              </a>
+              <a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#footer">
+                {ui.directory}
+              </a>
+            </div>
+            <div className="crt-chrome-row" aria-hidden="true" />
           </nav>
-          <div className="crt-chrome-en glitchy-text flex flex-col items-start gap-2 text-right sm:items-end">
-            <div className="max-w-[22rem] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">{hudTime}</div>
-            <button
-              type="button"
-              aria-label={ui.toggleLanguage}
-              className="channel-step-btn min-h-8 bg-transparent p-0 text-left text-[0.92em] uppercase leading-none text-[var(--text-secondary)] underline decoration-dotted decoration-white/30 underline-offset-4 hover:text-[var(--text-primary)] hover:opacity-90"
-              onClick={toggleLocale}
-            >
-              {ui.language}: {ui.langCode}
-            </button>
-            <div className="flex items-center gap-[0.35ch] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
+          <div className="crt-header-col shrink-0 font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
+            <div className="crt-chrome-row crt-chrome-row-end max-w-[22rem]">{hudDate}</div>
+            <div className="crt-chrome-row crt-chrome-row-end crt-hud-session max-w-[22rem]">{hudSession}</div>
+            <div className="crt-chrome-row crt-chrome-row-end">
+              <button
+                type="button"
+                aria-label={ui.toggleLanguage}
+                className="channel-step-btn bg-transparent p-0 uppercase text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)] hover:opacity-90"
+                onClick={toggleLocale}
+              >
+                {ui.language}: {ui.langCode}
+              </button>
+            </div>
+            <div className="crt-chrome-row crt-chrome-row-end glitchy-text gap-[0.35ch]">
               <button
                 type="button"
                 aria-label={ui.prevChannel}
                 disabled={isTransitioning}
-                className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40"
+                className="channel-step-btn min-w-8 bg-transparent p-0 text-[1em] leading-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40"
                 onClick={() => stepChannel(-1)}
               >
                 ◀
@@ -587,7 +607,7 @@ export default function Portfolio() {
                 type="button"
                 aria-label={ui.nextChannel}
                 disabled={isTransitioning}
-                className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40"
+                className="channel-step-btn min-w-8 bg-transparent p-0 text-[1em] leading-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40"
                 onClick={() => stepChannel(1)}
               >
                 ▶
@@ -597,8 +617,11 @@ export default function Portfolio() {
         </div>
       </header>
 
-      <main id="content" className="pointer-events-auto mx-auto w-full max-w-[min(80%,72rem)] flex-1 px-[clamp(0.5rem,2.5vw,1.5rem)] pb-[clamp(1.5rem,6vh,3rem)] pt-[clamp(0.25rem,1vh,0.75rem)]">
-        <div className="crt-body glitchy-text font-[family-name:var(--font-active)] font-normal text-[1.1rem]">
+      <main
+        id="content"
+        className="pointer-events-auto mx-auto w-full max-w-[var(--page-width)] flex-1 px-[var(--layout-edge-x)] pb-[clamp(1.5rem,6vh,3rem)] pt-[var(--layout-body-gap)]"
+      >
+        <div className="crt-body glitchy-text font-[family-name:var(--font-active)] font-normal">
           {locale === "en" ? (
             <>
               <p className="crt-paragraph">
@@ -659,7 +682,7 @@ export default function Portfolio() {
         </div>
         <nav
           id="footer"
-          className="crt-directory crt-chrome-en glitchy-text pointer-events-auto mt-[2.5em] scroll-mt-8 font-[family-name:var(--font-active)] text-[1.1rem] font-normal uppercase leading-[1.35] tracking-[0.02em]"
+          className="crt-directory crt-chrome-en glitchy-text pointer-events-auto mt-[2em] scroll-mt-8 font-[family-name:var(--font-active)] font-normal uppercase tracking-[0.02em]"
           aria-label="External contact links"
         >
           <ul className="flex list-none flex-col gap-[0.25em]">

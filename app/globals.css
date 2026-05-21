@@ -6,13 +6,22 @@
   --text-secondary: #fff;
   --glitchy-blue: rgba(2, 183, 182, 0.4);
   --glitchy-red: rgba(183, 2, 2, 0.4);
-  --font-size-primary: clamp(16px, 1.8vw, 34px);
-  --font-size-secondary: clamp(24px, 4.6vw, 63px);
-  --line-height: 1.4;
+  /* kaisermann.me rhythm: small chrome ~14–17px, body ~2.8× larger */
+  --font-size-chrome: clamp(14px, 1.1vw, 17px);
+  --font-size-primary: var(--font-size-chrome);
+  --font-size-secondary: clamp(30px, 3.4vw, 48px);
+  --line-height: 1.25;
+  --chrome-line-height: 1.25;
   --container-width: 80%;
   --page-width: min(80%, 72rem);
   --bio-font-size: var(--font-size-secondary);
-  --bio-line-height: 1.35;
+  --bio-line-height: 1.18;
+  --body-max-width-en: 41ch;
+  --body-max-width-zh: 24em;
+  --layout-edge-x: clamp(1rem, 5vw, 4.5rem);
+  --layout-chrome-top: 1em;
+  --layout-body-gap: calc(1.5 * var(--font-size-secondary) * var(--bio-line-height));
+  --chrome-row-gap: 0.4em;
   --font-active: var(--font-vcr), ui-monospace, monospace;
 }
 
@@ -33,7 +42,7 @@
 
 html[data-locale="zh"] {
   --font-active: "FZ Xiangsu CJK", var(--font-vcr), ui-monospace, monospace;
-  --bio-line-height: 1.45;
+  --bio-line-height: 1.22;
 }
 
 /* Explicit Latin tokens in Chinese UI (optional hooks share VT323). */
@@ -125,6 +134,51 @@ body {
   }
 }
 
+.crt-chrome,
+.crt-chrome-en {
+  font-size: var(--font-size-chrome);
+  line-height: var(--chrome-line-height);
+}
+
+.crt-header-chrome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chrome-row-gap);
+}
+
+@media (min-width: 640px) {
+  .crt-header-chrome {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
+
+.crt-header-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--chrome-row-gap);
+}
+
+.crt-chrome-row {
+  display: flex;
+  min-height: calc(var(--font-size-chrome) * var(--chrome-line-height));
+  align-items: center;
+  line-height: var(--chrome-line-height);
+  font-size: var(--font-size-chrome);
+  margin: 0;
+}
+
+.crt-chrome-row-end {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.crt-hud-session {
+  opacity: 0.92;
+  filter: blur(0.35px);
+}
+
 .crt-body {
   font-size: var(--bio-font-size);
   line-height: var(--bio-line-height);
@@ -133,9 +187,14 @@ body {
   max-width: 100%;
 }
 
+html[data-locale="en"] .crt-body {
+  max-width: var(--body-max-width-en);
+}
+
 html[data-locale="zh"] .crt-body {
   text-transform: none;
   letter-spacing: 0.04em;
+  max-width: var(--body-max-width-zh);
 }
 
 /* Header/footer chrome + social labels: always VT323 English styling. */
@@ -156,18 +215,21 @@ html[data-locale="zh"] .crt-chrome-en {
 }
 
 .crt-body .crt-paragraph + .crt-paragraph {
-  margin-top: 1.15em;
+  margin-top: 1em;
 }
 
-/* Social links sit just below the last bio paragraph (same scale & alignment). */
+/* Social links sit just below the last bio paragraph (chrome scale, same x-align). */
 .crt-directory {
   max-width: 100%;
+  font-size: var(--font-size-chrome);
+  line-height: var(--chrome-line-height);
 }
 
 @media (max-width: 480px) {
   :root {
-    --font-size-secondary: clamp(18px, 5.4vw, 40px);
-    --bio-line-height: 1.42;
+    --font-size-secondary: clamp(22px, 5vw, 36px);
+    --bio-line-height: 1.2;
+    --layout-body-gap: calc(1.35 * var(--font-size-secondary) * var(--bio-line-height));
   }
 }
 
