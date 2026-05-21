@@ -35,18 +35,16 @@ body {
   background: #000;
   color: var(--text-primary);
   font-family: inherit;
-  cursor: url("/assets/images/cursor-default.png") 2 2, auto;
+  cursor: auto;
 }
 
-a,
-button,
-[role="button"] {
-  cursor: url("/assets/images/cursor-pointer.png") 16 8, pointer;
-}
-
-.has-custom-cursor,
-.has-custom-cursor * {
-  cursor: none !important;
+/* Desktop custom cursor: only the JS overlay — hide all native/CSS cursors (avoids double cursor). */
+@media (hover: hover) and (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor body,
+  html.has-custom-cursor * {
+    cursor: none !important;
+  }
 }
 
 ::selection {
@@ -195,17 +193,21 @@ button,
   position: fixed;
   z-index: 10000;
   pointer-events: none;
-  width: 45px;
+  width: 40px;
   transform: translate3d(-9999px, -9999px, 0);
   will-change: transform;
 }
 
 .custom-cursor img {
-  width: 45px;
+  width: 40px;
   height: auto;
   display: block;
 }
 
 .custom-cursor.is-interactive {
-  width: 45px;
+  width: 43px;
+}
+
+.custom-cursor.is-interactive img {
+  width: 43px;
 }

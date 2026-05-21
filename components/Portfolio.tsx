@@ -110,6 +110,23 @@ export default function Portfolio() {
     if (pending) applyPending(pending);
   }, [applyPending]);
 
+  const closeContactImmediate = useCallback(() => {
+    setActiveCtrId(null);
+    setActiveMedia(null);
+    setContactOpen(false);
+    setBgSrc(VID.default);
+    setChannel(0);
+  }, []);
+
+  const openContactImmediate = useCallback((ctrId: string, ch: ChannelIndex) => {
+    contactDismissGuardUntil.current = Date.now() + 500;
+    setActiveCtrId(ctrId);
+    setChannel(ch);
+    setActiveMedia(null);
+    setBgSrc(VID.default);
+    setContactOpen(true);
+  }, []);
+
   const startTransition = useCallback(
     (pending: PendingTransition) => {
       if (isTransitioning) return;
@@ -133,6 +150,15 @@ export default function Portfolio() {
     (ctrId: string, ch: ChannelIndex, target: CtrMedia | "contact") => {
       if (isTransitioning) return;
 
+      if (target === "contact") {
+        if (contactOpen && activeCtrId === ctrId) {
+          closeContactImmediate();
+        } else {
+          openContactImmediate(ctrId, ch);
+        }
+        return;
+      }
+
       if (activeCtrId === ctrId) {
         startTransition({ action: "close" });
         return;
@@ -140,20 +166,23 @@ export default function Portfolio() {
 
       startTransition({ action: "open", ctrId, channel: ch, target });
     },
-    [activeCtrId, isTransitioning, startTransition],
+    [activeCtrId, contactOpen, isTransitioning, startTransition, openContactImmediate, closeContactImmediate],
   );
 
   const dismissToDefault = useCallback(() => {
     if (isTransitioning) return;
-    if (!activeCtrId && !contactOpen) return;
+    if (contactOpen) {
+      closeContactImmediate();
+      return;
+    }
+    if (!activeCtrId) return;
     startTransition({ action: "close" });
-  }, [activeCtrId, contactOpen, isTransitioning, startTransition]);
+  }, [activeCtrId, contactOpen, isTransitioning, startTransition, closeContactImmediate]);
 
   const dismissContact = useCallback((force: boolean) => {
     if (!force && Date.now() < contactDismissGuardUntil.current) return;
-    if (isTransitioning) return;
-    startTransition({ action: "close" });
-  }, [isTransitioning, startTransition]);
+    closeContactImmediate();
+  }, [closeContactImmediate]);
 
   const previewChannel = useCallback((ch: ChannelIndex) => {
     setChannel(ch);
@@ -375,7 +404,7 @@ export default function Portfolio() {
             }}
           >
             <motion.div
-              className="w-full max-w-sm border-2 border-gray-400 bg-[#c0c0c0] p-0 font-[family-name:var(--font-vcr)] text-black shadow-[4px_4px_0_#000]"
+              className="w-fit max-w-[min(92vw,300px)] border-2 border-gray-400 bg-[#c0c0c0] p-0 font-[family-name:var(--font-vcr)] text-black shadow-[4px_4px_0_#000]"
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               onClick={(e) => e.stopPropagation()}
@@ -384,10 +413,18 @@ export default function Portfolio() {
                 <span>COMMUNICATION.PROTOCOL</span>
                 <button type="button" onClick={() => dismissContact(true)}>×</button>
               </div>
-              <div className="space-y-4 p-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={IMG.contact} alt="Contact" className="w-full border border-gray-600 bg-white" />
-                <p className="text-center text-[10px] uppercase">Click outside the pane to dismiss</p>
+              <div className="flex flex-col items-center gap-2 p-2">
+                <div className="mx-auto w-[min(88vw,280px)] overflow-hidden border border-gray-600 bg-white aspect-[3/4]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={IMG.contact}
+                    alt="Contact"
+                    className="h-full w-full object-cover object-center"
+                  />
+                </div>
+                <p className="px-1 text-center text-[10px] uppercase leading-tight">
+                  Click outside the pane to dismiss
+                </p>
               </div>
             </motion.div>
           </motion.div>
