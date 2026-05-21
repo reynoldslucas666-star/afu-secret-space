@@ -8,14 +8,19 @@ import {
   useState,
 } from "react";
 
+/** Contact modal only — still PNG. */
 const IMG = {
   liunengfu: "/assets/images/liunengfu.png",
-  aigcIntern: "/assets/images/AIGCshixi.png",
-  yanchu: "/assets/images/yanchu.png",
-  dianying: "/assets/images/dianying.png",
-  zhanlan: "/assets/images/zhanlan.png",
-  lvxing: "/assets/images/lvxing.png",
   contact: "/assets/images/lianxifangshi.png",
+} as const;
+
+/** CTR fullscreen clips (from afu-archive-assets/images/*.mp4). */
+const CTR_VID = {
+  aigcIntern: "/assets/video/AIGCshixi.mp4",
+  yanchu: "/assets/video/yanchu.mp4",
+  dianying: "/assets/video/dianying.mp4",
+  zhanlan: "/assets/video/zhanlan.mp4",
+  lvxing: "/assets/video/lvxing.mp4",
 } as const;
 
 const VID = {
@@ -25,6 +30,8 @@ const VID = {
   theatrical: "/assets/video/theatrical-bg.mp4",
 } as const;
 
+/** Short wipe/glitch clip before every CTR open/close — add your file at this path. */
+const TRANSITION = "/assets/video/transition.mp4";
 const GLITCH_BARS_MP4 = "/assets/video/glitch-bars.mp4";
 const GLITCH_BARS_MOV = "/assets/video/glitch-bars.mov";
 const CURSOR_DEFAULT = "/assets/images/cursor-default.png";
@@ -33,15 +40,26 @@ const CURSOR_POINTER = "/assets/images/cursor-pointer.png";
 type VideoKey = keyof typeof VID;
 type ChannelIndex = 1 | 2 | 3 | 4;
 
+/** CTR target: image, fullscreen video (replaces png), or background feature reel. */
+export type CtrMedia =
+  | { kind: "image"; src: string }
+  | { kind: "video"; src: string }
+  | { kind: "background"; key: Exclude<VideoKey, "default"> };
+
+type PendingTransition =
+  | { action: "open"; ctrId: string; channel: ChannelIndex; target: CtrMedia | "contact" }
+  | { action: "close" };
+
 function formatChannel(n: number) {
   return String(n).padStart(2, "0");
 }
 
 export default function Portfolio() {
   const [bgSrc, setBgSrc] = useState<string>(VID.default);
-  const [activeVideo, setActiveVideo] = useState<Exclude<VideoKey, "default"> | null>(null);
-  const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [activeMedia, setActiveMedia] = useState<CtrMedia | null>(null);
+  const [activeCtrId, setActiveCtrId] = useState<string | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [hudTime, setHudTime] = useState("");
   const [useCustomCursor, setUseCustomCursor] = useState(false);
   const [cursorState, setCursorState] = useState({ x: 0, y: 0, visible: false, interactive: false });
@@ -49,60 +67,104 @@ export default function Portfolio() {
 
   const contactDismissGuardUntil = useRef(0);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
+  const transitionRef = useRef<HTMLVideoElement | null>(null);
+  const pendingRef = useRef<PendingTransition | null>(null);
 
-  const toggleImageFullscreen = useCallback((src: string, ch: ChannelIndex) => {
-    setActiveImage((prev) => {
-      const next = prev === src ? null : src;
-      setChannel(next ? ch : 0);
-      return next;
-    });
-    setActiveVideo(null);
+  const isFeatureBg = activeMedia?.kind === "background";
+
+  const applyPending = useCallback((pending: PendingTransition) => {
+    if (pending.action === "close") {
+      setActiveCtrId(null);
+      setActiveMedia(null);
+      setContactOpen(false);
+      setBgSrc(VID.default);
+      setChannel(0);
+      return;
+    }
+
+    setActiveCtrId(pending.ctrId);
+    setChannel(pending.channel);
+
+    if (pending.target === "contact") {
+      contactDismissGuardUntil.current = Date.now() + 500;
+      setActiveMedia(null);
+      setBgSrc(VID.default);
+      setContactOpen(true);
+      return;
+    }
+
+    setContactOpen(false);
+    setActiveMedia(pending.target);
+
+    if (pending.target.kind === "background") {
+      setBgSrc(VID[pending.target.key]);
+    } else {
+      setBgSrc(VID.default);
+    }
   }, []);
 
-  const openContact = useCallback(() => {
-    contactDismissGuardUntil.current = Date.now() + 500;
-    setContactOpen(true);
-    setChannel(4);
-  }, []);
+  const finishTransition = useCallback(() => {
+    const pending = pendingRef.current;
+    pendingRef.current = null;
+    setIsTransitioning(false);
+    if (pending) applyPending(pending);
+  }, [applyPending]);
+
+  const startTransition = useCallback(
+    (pending: PendingTransition) => {
+      if (isTransitioning) return;
+      pendingRef.current = pending;
+      setIsTransitioning(true);
+    },
+    [isTransitioning],
+  );
+
+  useEffect(() => {
+    if (!isTransitioning) return;
+    const el = transitionRef.current;
+    if (!el) return;
+    el.currentTime = 0;
+    void el.play().catch(() => finishTransition());
+  }, [isTransitioning, finishTransition]);
+
+  const handleCtrClick = useCallback(
+    (ctrId: string, ch: ChannelIndex, target: CtrMedia | "contact") => {
+      if (isTransitioning) return;
+
+      if (activeCtrId === ctrId) {
+        startTransition({ action: "close" });
+        return;
+      }
+
+      startTransition({ action: "open", ctrId, channel: ch, target });
+    },
+    [activeCtrId, isTransitioning, startTransition],
+  );
+
+  const dismissToDefault = useCallback(() => {
+    if (isTransitioning) return;
+    if (!activeCtrId && !contactOpen) return;
+    startTransition({ action: "close" });
+  }, [activeCtrId, contactOpen, isTransitioning, startTransition]);
 
   const dismissContact = useCallback((force: boolean) => {
     if (!force && Date.now() < contactDismissGuardUntil.current) return;
-    setContactOpen(false);
-    setChannel(0);
-  }, []);
-
-  const switchVideo = useCallback((key: Exclude<VideoKey, "default">, ch: ChannelIndex) => {
-    setActiveImage(null);
-    setBgSrc(VID[key]);
-    setActiveVideo(key);
-    setChannel(ch);
-  }, []);
-
-  const backToDefaultVideo = useCallback(() => {
-    setActiveVideo(null);
-    setBgSrc(VID.default);
-    setChannel(0);
-  }, []);
+    if (isTransitioning) return;
+    startTransition({ action: "close" });
+  }, [isTransitioning, startTransition]);
 
   const previewChannel = useCallback((ch: ChannelIndex) => {
     setChannel(ch);
   }, []);
 
   const clearPreviewChannel = useCallback(() => {
-    if (activeImage || activeVideo || contactOpen) return;
+    if (activeCtrId || contactOpen || isTransitioning) return;
     setChannel(0);
-  }, [activeImage, activeVideo, contactOpen]);
+  }, [activeCtrId, contactOpen, isTransitioning]);
 
   const handleGlobalClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Only clicks on the page backdrop should reset preview/video.
     if (e.target !== e.currentTarget) return;
-    if (activeVideo) {
-      backToDefaultVideo();
-    }
-    if (activeImage) {
-      setActiveImage(null);
-      setChannel(0);
-    }
+    dismissToDefault();
   };
 
   useEffect(() => {
@@ -126,6 +188,11 @@ export default function Portfolio() {
   }, []);
 
   useEffect(() => {
+    document.documentElement.classList.toggle("has-custom-cursor", useCustomCursor);
+    return () => document.documentElement.classList.remove("has-custom-cursor");
+  }, [useCustomCursor]);
+
+  useEffect(() => {
     if (!useCustomCursor) return;
     const onMove = (e: MouseEvent) => {
       const target = e.target as Element | null;
@@ -141,13 +208,12 @@ export default function Portfolio() {
     };
   }, [useCustomCursor]);
 
-  // Default loop stays muted (autoplay policy). CTR feature clips play with sound; nudge play after src/state changes.
   useEffect(() => {
-    if (activeImage) return;
+    if (isTransitioning || activeMedia?.kind === "image" || activeMedia?.kind === "video") return;
     const el = bgVideoRef.current;
     if (!el) return;
-    el.muted = activeVideo === null;
-    if (activeVideo !== null) {
+    el.muted = !isFeatureBg;
+    if (isFeatureBg) {
       el.volume = 1;
       try {
         el.currentTime = 0;
@@ -156,51 +222,90 @@ export default function Portfolio() {
       }
     }
     void el.play().catch(() => {});
-  }, [bgSrc, activeVideo, activeImage]);
+  }, [bgSrc, activeMedia, isTransitioning, isFeatureBg]);
+
+  const renderBackgroundLayer = () => {
+    if (activeMedia?.kind === "image") {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={activeMedia.src} alt="" className="h-full w-full object-cover" />
+      );
+    }
+
+    if (activeMedia?.kind === "video") {
+      return (
+        <video
+          key={activeMedia.src}
+          className="h-full w-full scale-[1.02] object-cover"
+          src={activeMedia.src}
+          autoPlay
+          playsInline
+          preload="auto"
+          onLoadedData={(e) => {
+            const v = e.currentTarget;
+            v.muted = false;
+            v.volume = 1;
+            void v.play().catch(() => {});
+          }}
+        />
+      );
+    }
+
+    return (
+      <video
+        key={bgSrc}
+        ref={bgVideoRef}
+        className="h-full w-full scale-[1.02] object-cover"
+        src={bgSrc}
+        autoPlay
+        muted={!isFeatureBg}
+        loop={!isFeatureBg}
+        playsInline
+        preload="auto"
+        onLoadedData={(e) => {
+          const v = e.currentTarget;
+          v.muted = !isFeatureBg;
+          if (isFeatureBg) v.volume = 1;
+          void v.play().catch(() => {});
+        }}
+        onCanPlay={(e) => {
+          if (isFeatureBg) void e.currentTarget.play().catch(() => {});
+        }}
+        onEnded={() => {
+          if (isFeatureBg && !isTransitioning) dismissToDefault();
+        }}
+        onError={() => {
+          setActiveMedia(null);
+          setActiveCtrId(null);
+          setBgSrc(VID.default);
+        }}
+      />
+    );
+  };
 
   return (
     <div
-      className={`relative min-h-dvh w-full overflow-x-hidden bg-black text-[var(--text-primary)] selection:bg-white selection:text-black ${
-        useCustomCursor ? "has-custom-cursor" : ""
-      }`}
+      className="relative min-h-dvh w-full overflow-x-hidden bg-black text-[var(--text-primary)] selection:bg-white selection:text-black"
       onClick={handleGlobalClick}
     >
       <div className="pointer-events-none fixed inset-0 z-0">
-        {activeImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={activeImage} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <video
-            key={bgSrc}
-            ref={bgVideoRef}
-            className="h-full w-full scale-[1.02] object-cover"
-            src={bgSrc}
-            autoPlay
-            muted={activeVideo === null}
-            loop={activeVideo === null}
-            playsInline
-            preload="auto"
-            onLoadedData={(e) => {
-              const v = e.currentTarget;
-              v.muted = activeVideo === null;
-              if (activeVideo !== null) v.volume = 1;
-              void v.play().catch(() => {});
-            }}
-            onCanPlay={(e) => {
-              const v = e.currentTarget;
-              if (activeVideo !== null) void v.play().catch(() => {});
-            }}
-            onEnded={() => {
-              if (activeVideo) backToDefaultVideo();
-            }}
-            onError={() => {
-              setActiveVideo(null);
-              setBgSrc(VID.default);
-            }}
-          />
-        )}
+        {renderBackgroundLayer()}
         <div className="absolute inset-0 bg-black/40" />
       </div>
+
+      {isTransitioning && (
+        <video
+          ref={transitionRef}
+          className="pointer-events-none fixed inset-0 z-[1] h-full w-full scale-[1.02] object-cover"
+          src={TRANSITION}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          onEnded={finishTransition}
+          onError={finishTransition}
+        />
+      )}
 
       <div className="pointer-events-none fixed inset-0 z-[2] mix-blend-overlay opacity-[0.09] crt-noise" />
       <div className="pointer-events-none fixed inset-0 z-[3] opacity-[0.18] crt-scanlines" />
@@ -230,27 +335,27 @@ export default function Portfolio() {
         <div className="crt-body glitchy-text font-[family-name:var(--font-vcr)] font-normal text-[1.1rem]">
           <p className="crt-paragraph">
             Hi! I&apos;m{" "}
-            <CrtSpan channel={1} img={IMG.liunengfu} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>Liu Nengfu</CrtSpan>
+            <CrtSpan ctrId="name" channel={1} media={{ kind: "image", src: IMG.liunengfu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>Liu Nengfu</CrtSpan>
             —you can call me Afu. I&apos;m at the Beijing Film Academy, currently{" "}
-            <CrtSpan channel={1} img={IMG.aigcIntern} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>interning on the AIGC product side</CrtSpan>
+            <CrtSpan ctrId="aigc-intern" channel={1} media={{ kind: "video", src: CTR_VID.aigcIntern }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>interning on the AIGC product side</CrtSpan>
             , and a filmmaker who thinks in shots, not bullet points.
           </p>
           <p className="crt-paragraph">
             Off campus I orbit{" "}
-            <CrtSpan channel={2} img={IMG.yanchu} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>live sets and room acoustics</CrtSpan>,{" "}
-            <CrtSpan channel={2} img={IMG.dianying} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>films wherever they screen</CrtSpan>,{" "}
-            <CrtSpan channel={2} img={IMG.zhanlan} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>exhibitions with sharp lighting</CrtSpan>, and{" "}
-            <CrtSpan channel={2} img={IMG.lvxing} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>travel that wanders on purpose</CrtSpan>.
+            <CrtSpan ctrId="live-music" channel={2} media={{ kind: "video", src: CTR_VID.yanchu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>live sets and room acoustics</CrtSpan>,{" "}
+            <CrtSpan ctrId="films" channel={2} media={{ kind: "video", src: CTR_VID.dianying }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>films wherever they screen</CrtSpan>,{" "}
+            <CrtSpan ctrId="exhibitions" channel={2} media={{ kind: "video", src: CTR_VID.zhanlan }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>exhibitions with sharp lighting</CrtSpan>, and{" "}
+            <CrtSpan ctrId="travel" channel={2} media={{ kind: "video", src: CTR_VID.lvxing }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>travel that wanders on purpose</CrtSpan>.
           </p>
           <p className="crt-paragraph">
             I cut and ship video—work spans{" "}
-            <CrtSpan channel={3} video="aigc" onVideo={switchVideo} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>AIGC-generated video</CrtSpan>,{" "}
-            <CrtSpan channel={3} video="live" onVideo={switchVideo} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>live-action</CrtSpan>, and{" "}
-            <CrtSpan channel={3} video="theatrical" onVideo={switchVideo} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>theatrical campaigns</CrtSpan>.
+            <CrtSpan ctrId="vid-aigc" channel={3} media={{ kind: "background", key: "aigc" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>AIGC-generated video</CrtSpan>,{" "}
+            <CrtSpan ctrId="vid-live" channel={3} media={{ kind: "background", key: "live" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>live-action</CrtSpan>, and{" "}
+            <CrtSpan ctrId="vid-theatrical" channel={3} media={{ kind: "background", key: "theatrical" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>theatrical campaigns</CrtSpan>.
           </p>
           <p className="crt-paragraph">
             I love this line of work. If the frequency matches,{" "}
-            <CrtSpan channel={4} onContact={openContact} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>open a line</CrtSpan>.
+            <CrtSpan ctrId="contact" channel={4} contact onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>open a line</CrtSpan>.
           </p>
         </div>
       </main>
@@ -289,9 +394,11 @@ export default function Portfolio() {
 
       {useCustomCursor && cursorState.visible && (
         <div
-          className="custom-cursor pointer-events-none fixed left-0 top-0 z-[999]"
+          className={`custom-cursor pointer-events-none fixed left-0 top-0 z-[999] ${
+            cursorState.interactive ? "is-interactive" : ""
+          }`}
           style={{
-            transform: `translate3d(${cursorState.x - (cursorState.interactive ? 18 : 2)}px, ${
+            transform: `translate3d(${cursorState.x - (cursorState.interactive ? 17 : 2)}px, ${
               cursorState.y - (cursorState.interactive ? 9 : 2)
             }px, 0)`,
           }}
@@ -306,32 +413,32 @@ export default function Portfolio() {
 
 function CrtSpan({
   children,
+  ctrId,
   channel,
-  img,
-  video,
-  onImage,
-  onVideo,
-  onContact,
+  media,
+  contact,
+  onCtrClick,
   onChannelPreview,
   onChannelClear,
+  isTransitioning,
 }: {
   children: React.ReactNode;
+  ctrId: string;
   channel: ChannelIndex;
-  img?: string;
-  video?: Exclude<VideoKey, "default">;
-  onImage?: (src: string, ch: ChannelIndex) => void;
-  onVideo?: (k: Exclude<VideoKey, "default">, ch: ChannelIndex) => void;
-  onContact?: () => void;
+  media?: CtrMedia;
+  contact?: boolean;
+  onCtrClick: (ctrId: string, ch: ChannelIndex, target: CtrMedia | "contact") => void;
   onChannelPreview?: (ch: ChannelIndex) => void;
   onChannelClear?: () => void;
+  isTransitioning: boolean;
 }) {
-  const interactive = Boolean(img || video || onContact);
+  const interactive = Boolean(media || contact);
 
   const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    if (video && onVideo) onVideo(video, channel);
-    if (img && onImage) onImage(img, channel);
-    if (onContact) onContact();
+    if (isTransitioning) return;
+    if (contact) onCtrClick(ctrId, channel, "contact");
+    else if (media) onCtrClick(ctrId, channel, media);
   };
 
   if (!interactive) return <span className="text-[var(--text-secondary)]">{children}</span>;
