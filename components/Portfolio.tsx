@@ -37,6 +37,12 @@ const GLITCH_BARS_MOV = "/assets/video/glitch-bars.mov";
 const CURSOR_DEFAULT = "/assets/images/cursor-default.png";
 const CURSOR_POINTER = "/assets/images/cursor-pointer.png";
 
+const SOCIAL_LINKS = [
+  { label: "INSTAGRAM", href: "https://www.instagram.com/my_afuuuu/" },
+  { label: "REDNOTE", href: "https://www.xiaohongshu.com/user/profile/621a328d00000000100089d3" },
+  { label: "EMAIL", href: "mailto:afuuuu0608@163.com" },
+] as const;
+
 type VideoKey = keyof typeof VID;
 type ChannelIndex = 1 | 2 | 3 | 4;
 
@@ -387,7 +393,8 @@ export default function Portfolio() {
       <div className="pointer-events-none fixed inset-0 z-[3] opacity-[0.18] crt-scanlines" />
       <div className="pointer-events-none fixed inset-0 z-[4] crt-vignette" />
 
-      <header className="pointer-events-none relative z-[5] min-h-0 uppercase tracking-wide text-[var(--text-secondary)] sm:min-h-[min(28vh,14rem)]">
+      <div className="relative z-[5] flex min-h-dvh flex-col">
+      <header className="pointer-events-none min-h-0 uppercase tracking-wide text-[var(--text-secondary)] sm:min-h-[min(28vh,14rem)]">
         <div className="pointer-events-auto sticky top-0 z-[6] flex flex-col gap-5 px-[clamp(1rem,5vw,3rem)] pb-3 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8 sm:pb-4 sm:pt-8">
           <nav className="flex flex-1 flex-col gap-4 sm:max-w-[55%]" aria-label="Primary">
             <ul className="flex list-none items-center gap-0 font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">
@@ -407,7 +414,7 @@ export default function Portfolio() {
         </div>
       </header>
 
-      <main id="content" className="pointer-events-auto relative z-[5] mx-auto w-full max-w-[min(80%,72rem)] px-[clamp(1rem,5vw,3rem)] pb-28 pt-[clamp(0.5rem,2vh,1.5rem)]">
+      <main id="content" className="pointer-events-auto mx-auto w-full max-w-[min(80%,72rem)] flex-1 px-[clamp(1rem,5vw,3rem)] pb-12 pt-[clamp(0.5rem,2vh,1.5rem)]">
         <div className="crt-body glitchy-text font-[family-name:var(--font-vcr)] font-normal text-[1.1rem]">
           <p className="crt-paragraph">
             Hi! I&apos;m{" "}
@@ -436,6 +443,29 @@ export default function Portfolio() {
         </div>
       </main>
 
+      <footer
+        id="footer"
+        className="pointer-events-auto flex min-h-[min(42vh,20rem)] flex-col justify-end px-[clamp(1rem,5vw,3rem)] pb-10 pt-16 font-[family-name:var(--font-vcr)] uppercase tracking-wide scroll-mt-8"
+        aria-label="External contact links"
+      >
+        <ul className="glitchy-text flex list-none flex-col gap-2 text-[10px] sm:text-xs">
+          {SOCIAL_LINKS.map(({ label, href }) => (
+            <li key={label}>
+              <a
+                className="inline-block min-h-8 py-1 text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)] hover:opacity-90"
+                href={href}
+                {...(href.startsWith("mailto:")
+                  ? {}
+                  : { target: "_blank", rel: "noopener noreferrer" })}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </footer>
+      </div>
+
       <AnimatePresence>
         {contactOpen && (
           <motion.div
@@ -449,26 +479,42 @@ export default function Portfolio() {
             }}
           >
             <motion.div
-              className="w-fit max-w-[min(92vw,300px)] border-2 border-gray-400 bg-[#c0c0c0] p-0 font-[family-name:var(--font-vcr)] text-black shadow-[4px_4px_0_#000]"
+              className="mx-auto w-[min(92vw,280px)] border-2 border-gray-400 bg-[#c0c0c0] p-0 font-[family-name:var(--font-vcr)] text-black shadow-[4px_4px_0_#000]"
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between bg-blue-800 px-2 py-1 text-xs text-white">
-                <span>COMMUNICATION.PROTOCOL</span>
-                <button type="button" onClick={() => dismissContact(true)}>×</button>
+              <div className="flex items-stretch bg-blue-800 text-xs text-white">
+                <span className="flex min-h-10 flex-1 items-center px-2 py-1 leading-tight">
+                  COMMUNICATION.PROTOCOL
+                </span>
+                <button
+                  type="button"
+                  aria-label="Close contact window"
+                  className="flex min-h-10 min-w-12 shrink-0 items-center justify-center border-l border-blue-900/60 px-3 text-xl leading-none hover:bg-blue-900 active:bg-blue-950"
+                  onClick={() => dismissContact(true)}
+                >
+                  ×
+                </button>
               </div>
-              <div className="flex flex-col items-center gap-2 p-2">
-                <div className="mx-auto w-[min(88vw,280px)] overflow-hidden border border-gray-600 bg-white aspect-[3/4]">
+              <div className="flex flex-col items-center gap-3 p-3">
+                <div className="w-full overflow-hidden border border-gray-600 bg-white aspect-[3/4]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={IMG.contact}
                     alt="Contact"
-                    className="h-full w-full object-cover object-center"
+                    className="mx-auto block h-full w-full object-cover object-[50%_42%]"
                   />
                 </div>
-                <p className="px-1 text-center text-[10px] uppercase leading-tight">
-                  Click outside the pane to dismiss
+                <button
+                  type="button"
+                  className="min-h-10 w-full border border-gray-500 bg-[#d4d4d4] px-3 py-2 text-center text-[10px] uppercase leading-tight hover:bg-[#e8e8e8] active:bg-white"
+                  onClick={() => dismissContact(true)}
+                >
+                  Close window
+                </button>
+                <p className="text-center text-[10px] uppercase leading-tight text-black/70">
+                  Or click the dark area outside to dismiss
                 </p>
               </div>
             </motion.div>
