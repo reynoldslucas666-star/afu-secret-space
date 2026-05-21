@@ -540,35 +540,47 @@ export default function Portfolio() {
       <div className="pointer-events-none fixed inset-0 z-[4] crt-vignette" />
 
       <div className="relative z-[5] flex min-h-dvh flex-col">
-      <header className="pointer-events-none min-h-0 uppercase tracking-wide text-[var(--text-secondary)] sm:min-h-[min(28vh,14rem)]">
-        <div className="pointer-events-auto sticky top-0 z-[6] flex flex-col gap-5 px-[clamp(1rem,5vw,3rem)] pb-3 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8 sm:pb-4 sm:pt-8">
-          <nav className="flex flex-1 flex-col gap-4 sm:max-w-[55%]" aria-label="Primary">
-            <ul className="crt-chrome crt-chrome-en flex list-none flex-col gap-3 font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
+      <header className="pointer-events-none min-h-0 uppercase tracking-wide text-[var(--text-secondary)] sm:min-h-[min(14vh,7rem)]">
+        <div className="pointer-events-auto sticky top-0 z-[6] flex flex-col gap-3 px-[clamp(0.5rem,2.5vw,1.5rem)] pb-2 pt-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:pb-2 sm:pt-4">
+          <nav className="flex flex-1 flex-col gap-2 sm:max-w-[55%]" aria-label="Primary">
+            <ul className="crt-chrome crt-chrome-en flex list-none flex-col gap-2 font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
               <li className="normal-case">{ui.siteTitle}</li>
-              <li className="flex items-center gap-[0.35ch] text-[0.92em] uppercase">
-                <span>{ui.language}:</span>
-                <button
-                  type="button"
-                  aria-label={ui.prevLanguage}
-                  className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none hover:text-[var(--text-primary)]"
-                  onClick={() => stepLocale(-1)}
-                >
-                  ◀
-                </button>
-                <span className="min-w-[2.5ch] tabular-nums">{ui.langCode}</span>
-                <button
-                  type="button"
-                  aria-label={ui.nextLanguage}
-                  className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none hover:text-[var(--text-primary)]"
-                  onClick={() => stepLocale(1)}
-                >
-                  ▶
-                </button>
+            </ul>
+            <ul className="crt-chrome-en glitchy-text flex list-none flex-col gap-2 sm:flex-row sm:gap-6">
+              <li>
+                <a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#content">
+                  {ui.archive}
+                </a>
+              </li>
+              <li>
+                <a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#footer">
+                  {ui.directory}
+                </a>
               </li>
             </ul>
           </nav>
           <div className="crt-chrome-en glitchy-text flex flex-col items-start gap-2 text-right sm:items-end">
             <div className="max-w-[22rem] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">{hudTime}</div>
+            <div className="flex items-center gap-[0.35ch] text-[0.92em] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
+              <span>{ui.language}:</span>
+              <button
+                type="button"
+                aria-label={ui.prevLanguage}
+                className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none hover:text-[var(--text-primary)]"
+                onClick={() => stepLocale(-1)}
+              >
+                ◀
+              </button>
+              <span className="min-w-[2.5ch] tabular-nums">{ui.langCode}</span>
+              <button
+                type="button"
+                aria-label={ui.nextLanguage}
+                className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none hover:text-[var(--text-primary)]"
+                onClick={() => stepLocale(1)}
+              >
+                ▶
+              </button>
+            </div>
             <div className="flex items-center gap-[0.35ch] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
               <button
                 type="button"
@@ -596,7 +608,7 @@ export default function Portfolio() {
         </div>
       </header>
 
-      <main id="content" className="pointer-events-auto mx-auto w-full max-w-[min(80%,72rem)] flex-1 px-[clamp(1rem,5vw,3rem)] pb-[clamp(3rem,12vh,6rem)] pt-[clamp(0.5rem,2vh,1.5rem)]">
+      <main id="content" className="pointer-events-auto mx-auto w-full max-w-[min(80%,72rem)] flex-1 px-[clamp(0.5rem,2.5vw,1.5rem)] pb-[clamp(1.5rem,6vh,3rem)] pt-[clamp(0.25rem,1vh,0.75rem)]">
         <div className="crt-body glitchy-text font-[family-name:var(--font-active)] font-normal text-[1.1rem]">
           {locale === "en" ? (
             <>
