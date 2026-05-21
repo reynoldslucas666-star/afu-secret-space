@@ -2,6 +2,14 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  CTR_LABEL,
+  LOCALE_STORAGE_KEY,
+  type Locale,
+  localeLangAttribute,
+  nextLocale,
+  UI,
+} from "@/lib/copy";
+import {
   useCallback,
   useEffect,
   useRef,
@@ -128,6 +136,7 @@ export default function Portfolio() {
   const [useCustomCursor, setUseCustomCursor] = useState(false);
   const [cursorState, setCursorState] = useState({ x: 0, y: 0, visible: false, interactive: false });
   const [channel, setChannel] = useState(0);
+  const [locale, setLocale] = useState<Locale>("en");
 
   const contactDismissGuardUntil = useRef(0);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -316,8 +325,34 @@ export default function Portfolio() {
   };
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+      if (stored === "en" || stored === "zh") setLocale(stored);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = localeLangAttribute(locale);
+    document.documentElement.dataset.locale = locale;
+    try {
+      localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+    } catch {
+      /* ignore */
+    }
+  }, [locale]);
+
+  const stepLocale = useCallback((delta: -1 | 1) => {
+    setLocale((prev) => nextLocale(prev, delta));
+  }, []);
+
+  const ui = UI[locale];
+  const ctrLabel = CTR_LABEL[locale];
+
+  useEffect(() => {
     const tick = () => {
-      setHudTime(new Date().toLocaleString("en-US", {
+      setHudTime(new Date().toLocaleString(locale === "zh" ? "zh-CN" : "en-US", {
         weekday: "short", month: "short", day: "2-digit", year: "numeric",
         hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
       }).toUpperCase());
@@ -325,7 +360,7 @@ export default function Portfolio() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     const media = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -483,30 +518,54 @@ export default function Portfolio() {
       <header className="pointer-events-none min-h-0 uppercase tracking-wide text-[var(--text-secondary)] sm:min-h-[min(28vh,14rem)]">
         <div className="pointer-events-auto sticky top-0 z-[6] flex flex-col gap-5 px-[clamp(1rem,5vw,3rem)] pb-3 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8 sm:pb-4 sm:pt-8">
           <nav className="flex flex-1 flex-col gap-4 sm:max-w-[55%]" aria-label="Primary">
-            <ul className="flex list-none items-center gap-0 font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">
-              <li className="normal-case flex items-center after:ml-[0.5ch] after:text-[1.15em] after:content-['▶']">{"Afu's secret space"}</li>
+            <ul className="crt-chrome flex list-none flex-col gap-3 font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
+              <li className="normal-case flex items-center after:ml-[0.5ch] after:text-[1.15em] after:content-['▶']">
+                {ui.siteTitle}
+              </li>
+              <li className="flex items-center gap-[0.35ch] text-[0.92em] uppercase">
+                <span>{ui.language}:</span>
+                <button
+                  type="button"
+                  aria-label={ui.prevLanguage}
+                  className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none hover:text-[var(--text-primary)]"
+                  onClick={() => stepLocale(-1)}
+                >
+                  ◀
+                </button>
+                <span className="min-w-[2.5ch] tabular-nums">{ui.langCode}</span>
+                <button
+                  type="button"
+                  aria-label={ui.nextLanguage}
+                  className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none hover:text-[var(--text-primary)]"
+                  onClick={() => stepLocale(1)}
+                >
+                  ▶
+                </button>
+              </li>
             </ul>
             <ul className="glitchy-text flex list-none flex-col gap-2 sm:flex-row sm:gap-6">
-              <li><a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#content">ARCHIVE_01</a></li>
-              <li><a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#footer">DIRECTORY</a></li>
+              <li><a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#content">{ui.archive}</a></li>
+              <li><a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#footer">{ui.directory}</a></li>
             </ul>
           </nav>
           <div className="glitchy-text flex flex-col items-start gap-2 text-right sm:items-end">
-            <div className="max-w-[22rem] font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">{hudTime}</div>
-            <div className="flex items-center gap-[0.35ch] font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">
+            <div className="max-w-[22rem] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">{hudTime}</div>
+            <div className="flex items-center gap-[0.35ch] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
               <button
                 type="button"
-                aria-label="Previous channel"
+                aria-label={ui.prevChannel}
                 disabled={isTransitioning}
                 className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40"
                 onClick={() => stepChannel(-1)}
               >
                 ◀
               </button>
-              <span className="min-w-[7.5ch] tabular-nums">CHANNEL {formatChannel(channel)}</span>
+              <span className="min-w-[7.5ch] tabular-nums">
+                {ui.channel} {formatChannel(channel)}
+              </span>
               <button
                 type="button"
-                aria-label="Next channel"
+                aria-label={ui.nextChannel}
                 disabled={isTransitioning}
                 className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40"
                 onClick={() => stepChannel(1)}
@@ -519,35 +578,66 @@ export default function Portfolio() {
       </header>
 
       <main id="content" className="pointer-events-auto mx-auto w-full max-w-[min(80%,72rem)] flex-1 px-[clamp(1rem,5vw,3rem)] pb-[clamp(3rem,12vh,6rem)] pt-[clamp(0.5rem,2vh,1.5rem)]">
-        <div className="crt-body glitchy-text font-[family-name:var(--font-vcr)] font-normal text-[1.1rem]">
-          <p className="crt-paragraph">
-            Hi! I&apos;m{" "}
-            <CrtSpan ctrId="name" media={{ kind: "video", src: CTR_VID.liunengfu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>Liu Nengfu</CrtSpan>
-            —you can call me Afu. I&apos;m at the Beijing Film Academy, currently{" "}
-            <CrtSpan ctrId="aigc-intern" media={{ kind: "video", src: CTR_VID.aigcIntern }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>interning on the AIGC product side</CrtSpan>
-            , and a filmmaker who thinks in shots, not bullet points.
-          </p>
-          <p className="crt-paragraph">
-            Off campus I orbit{" "}
-            <CrtSpan ctrId="live-music" media={{ kind: "video", src: CTR_VID.yanchu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>live sets and room acoustics</CrtSpan>,{" "}
-            <CrtSpan ctrId="films" media={{ kind: "video", src: CTR_VID.dianying }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>films wherever they screen</CrtSpan>,{" "}
-            <CrtSpan ctrId="exhibitions" media={{ kind: "video", src: CTR_VID.zhanlan }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>exhibitions with sharp lighting</CrtSpan>, and{" "}
-            <CrtSpan ctrId="travel" media={{ kind: "video", src: CTR_VID.lvxing }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>travel that wanders on purpose</CrtSpan>.
-          </p>
-          <p className="crt-paragraph">
-            I cut and ship video—work spans{" "}
-            <CrtSpan ctrId="vid-aigc" media={{ kind: "background", key: "aigc" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>AIGC-generated video</CrtSpan>,{" "}
-            <CrtSpan ctrId="vid-live" media={{ kind: "background", key: "live" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>live-action</CrtSpan>, and{" "}
-            <CrtSpan ctrId="vid-theatrical" media={{ kind: "background", key: "theatrical" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>theatrical campaigns</CrtSpan>.
-          </p>
-          <p className="crt-paragraph">
-            I love this line of work. If the frequency matches,{" "}
-            <CrtSpan ctrId="contact" contact onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>open a line</CrtSpan>.
-          </p>
+        <div className="crt-body glitchy-text font-[family-name:var(--font-active)] font-normal text-[1.1rem]">
+          {locale === "en" ? (
+            <>
+              <p className="crt-paragraph">
+                Hi! I&apos;m{" "}
+                <CrtSpan ctrId="name" media={{ kind: "video", src: CTR_VID.liunengfu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.name}</CrtSpan>
+                —you can call me Afu. I&apos;m at the Beijing Film Academy, currently{" "}
+                <CrtSpan ctrId="aigc-intern" media={{ kind: "video", src: CTR_VID.aigcIntern }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["aigc-intern"]}</CrtSpan>
+                , and a filmmaker who thinks in shots, not bullet points.
+              </p>
+              <p className="crt-paragraph">
+                Off campus I orbit{" "}
+                <CrtSpan ctrId="live-music" media={{ kind: "video", src: CTR_VID.yanchu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["live-music"]}</CrtSpan>,{" "}
+                <CrtSpan ctrId="films" media={{ kind: "video", src: CTR_VID.dianying }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.films}</CrtSpan>,{" "}
+                <CrtSpan ctrId="exhibitions" media={{ kind: "video", src: CTR_VID.zhanlan }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.exhibitions}</CrtSpan>, and{" "}
+                <CrtSpan ctrId="travel" media={{ kind: "video", src: CTR_VID.lvxing }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.travel}</CrtSpan>.
+              </p>
+              <p className="crt-paragraph">
+                I cut and ship video—work spans{" "}
+                <CrtSpan ctrId="vid-aigc" media={{ kind: "background", key: "aigc" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["vid-aigc"]}</CrtSpan>,{" "}
+                <CrtSpan ctrId="vid-live" media={{ kind: "background", key: "live" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["vid-live"]}</CrtSpan>, and{" "}
+                <CrtSpan ctrId="vid-theatrical" media={{ kind: "background", key: "theatrical" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["vid-theatrical"]}</CrtSpan>.
+              </p>
+              <p className="crt-paragraph">
+                I love this line of work. If the frequency matches,{" "}
+                <CrtSpan ctrId="contact" contact onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.contact}</CrtSpan>.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="crt-paragraph">
+                你好！我是{" "}
+                <CrtSpan ctrId="name" media={{ kind: "video", src: CTR_VID.liunengfu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.name}</CrtSpan>
+                ，叫我阿福就好。我就读于北京电影学院，目前{" "}
+                <CrtSpan ctrId="aigc-intern" media={{ kind: "video", src: CTR_VID.aigcIntern }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["aigc-intern"]}</CrtSpan>
+                ，是一名用镜头思考的影像工作者。
+              </p>
+              <p className="crt-paragraph">
+                课余我周旋于{" "}
+                <CrtSpan ctrId="live-music" media={{ kind: "video", src: CTR_VID.yanchu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["live-music"]}</CrtSpan>、{" "}
+                <CrtSpan ctrId="films" media={{ kind: "video", src: CTR_VID.dianying }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.films}</CrtSpan>、{" "}
+                <CrtSpan ctrId="exhibitions" media={{ kind: "video", src: CTR_VID.zhanlan }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.exhibitions}</CrtSpan>，以及{" "}
+                <CrtSpan ctrId="travel" media={{ kind: "video", src: CTR_VID.lvxing }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.travel}</CrtSpan>。
+              </p>
+              <p className="crt-paragraph">
+                我剪辑并交付影像——作品涵盖{" "}
+                <CrtSpan ctrId="vid-aigc" media={{ kind: "background", key: "aigc" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["vid-aigc"]}</CrtSpan>、{" "}
+                <CrtSpan ctrId="vid-live" media={{ kind: "background", key: "live" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["vid-live"]}</CrtSpan>与{" "}
+                <CrtSpan ctrId="vid-theatrical" media={{ kind: "background", key: "theatrical" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel["vid-theatrical"]}</CrtSpan>。
+              </p>
+              <p className="crt-paragraph">
+                我热爱这份工作。若频率相合，欢迎{" "}
+                <CrtSpan ctrId="contact" contact onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>{ctrLabel.contact}</CrtSpan>。
+              </p>
+            </>
+          )}
         </div>
         <nav
           id="footer"
-          className="crt-directory glitchy-text pointer-events-auto mt-[2.5em] scroll-mt-8 font-[family-name:var(--font-vcr)] text-[1.1rem] font-normal uppercase leading-[1.35] tracking-[0.02em]"
+          className="crt-directory glitchy-text pointer-events-auto mt-[2.5em] scroll-mt-8 font-[family-name:var(--font-active)] text-[1.1rem] font-normal uppercase leading-[1.35] tracking-[0.02em]"
           aria-label="External contact links"
         >
           <ul className="flex list-none flex-col gap-[0.25em]">
@@ -582,16 +672,16 @@ export default function Portfolio() {
             }}
           >
             <motion.div
-              className="mx-auto w-[min(92vw,440px)] border-2 border-gray-400 bg-[#c0c0c0] p-0 font-[family-name:var(--font-vcr)] text-black shadow-[4px_4px_0_#000]"
+              className="mx-auto w-[min(92vw,440px)] border-2 border-gray-400 bg-[#c0c0c0] p-0 font-[family-name:var(--font-active)] text-black shadow-[4px_4px_0_#000]"
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex min-h-10 items-stretch justify-between gap-2 bg-blue-800 px-2 py-1 text-xs text-white">
-                <span className="flex flex-1 items-center leading-tight">COMMUNICATION.PROTOCOL</span>
+                <span className="flex flex-1 items-center leading-tight">{ui.communicationProtocol}</span>
                 <button
                   type="button"
-                  aria-label="Close contact window"
+                  aria-label={ui.closeContact}
                   className="flex h-8 min-w-10 shrink-0 items-center justify-center px-2 text-xl leading-none hover:bg-blue-900 active:bg-blue-950"
                   onClick={() => dismissContact(true)}
                 >
@@ -607,8 +697,8 @@ export default function Portfolio() {
                     className="mx-auto block max-h-[min(58vh,480px)] w-full object-contain"
                   />
                 </div>
-                <p className="w-full text-center text-sm uppercase tracking-wide text-black sm:text-base">
-                  Add Afu&apos;s WeChat
+                <p className="w-full text-center text-sm tracking-wide text-black sm:text-base">
+                  {ui.addWeChat}
                 </p>
               </div>
             </motion.div>

@@ -13,6 +13,13 @@
   --page-width: min(80%, 72rem);
   --bio-font-size: var(--font-size-secondary);
   --bio-line-height: 1.35;
+  --font-active: var(--font-vcr), ui-monospace, monospace;
+}
+
+/* Replace --font-zh in this rule when you drop in a custom Chinese pixel font. */
+html[data-locale="zh"] {
+  --font-active: var(--font-zh), "PingFang SC", "Microsoft YaHei", sans-serif;
+  --bio-line-height: 1.45;
 }
 
 @theme inline {
@@ -23,7 +30,7 @@
 }
 
 html {
-  font-family: var(--font-vcr), ui-monospace, monospace;
+  font-family: var(--font-active);
   font-weight: 400;
   font-size: var(--font-size-primary);
   line-height: var(--line-height);
@@ -105,6 +112,13 @@ body {
   letter-spacing: 0.02em;
   text-transform: uppercase;
   max-width: 100%;
+}
+
+html[data-locale="zh"] .crt-body,
+html[data-locale="zh"] .crt-directory,
+html[data-locale="zh"] .crt-chrome {
+  text-transform: none;
+  letter-spacing: 0.04em;
 }
 
 .crt-body p,
