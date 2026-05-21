@@ -61,7 +61,7 @@ export const CTR_LABEL = {
   },
   zh: {
     name: "刘能富",
-    "aigc-intern": "AIGC 产品",
+    "aigc-intern": "AIGC产品经理",
     "live-music": "听各种音乐现场/ Livehouse",
     films: "看各种电影",
     exhibitions: "灯光锐利的展览",

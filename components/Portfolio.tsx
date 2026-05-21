@@ -642,29 +642,23 @@ export default function Portfolio() {
               <p className="crt-paragraph">
                 你好呀！我是{" "}
                 <CrtSpan ctrId="name" media={{ kind: "video", src: CTR_VID.liunengfu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}><MixText text={ctrLabel.name} active /></CrtSpan>
-                ，你也可以叫我阿富，就读于北京电影学院。
-              </p>
-              <p className="crt-paragraph">
-                欢迎来到我的个人主页，希望你可以在这个网页了解到我的另一面～
-              </p>
-              <p className="crt-paragraph">
-                我目前在{" "}
+                ，你也可以叫我阿富，目前就读于北京电影学院，并持续在{" "}
                 <CrtSpan ctrId="aigc-intern" media={{ kind: "video", src: CTR_VID.aigcIntern }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}><MixText text={ctrLabel["aigc-intern"]} active /></CrtSpan>
-                这个方向持续探索与学习中，同时是一名习惯于使用镜头语言思考的影像工作者。
+                这个方向持续探索与发力。
               </p>
               <p className="crt-paragraph">
-                日常生活中，我的爱好还集中在：{" "}
+                欢迎光临我的精神自留地，希望你可以在这个网页了解到我的另一面～私底下的我，主要靠这几样东西续命：{" "}
                 <CrtSpan ctrId="live-music" media={{ kind: "video", src: CTR_VID.yanchu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}><MixText text={ctrLabel["live-music"]} active /></CrtSpan>、{" "}
                 <CrtSpan ctrId="films" media={{ kind: "video", src: CTR_VID.dianying }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}><MixText text={ctrLabel.films} active /></CrtSpan>、{" "}
                 <CrtSpan ctrId="travel" media={{ kind: "video", src: CTR_VID.lvxing }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}><MixText text={ctrLabel.travel} active /></CrtSpan>
-                ……如果你也和我臭气相投，那真是找对人了，赶快来一起玩！
+                ……如果你也恰好臭气相投，那快来一起玩！
               </p>
               <p className="crt-paragraph">
-                内容创作上，我的作品集涵盖：{" "}
+                至于内容产出，{" "}
                 <CrtSpan ctrId="vid-aigc" media={{ kind: "background", key: "aigc" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}><MixText text={ctrLabel["vid-aigc"]} active /></CrtSpan>、{" "}
                 <CrtSpan ctrId="vid-live" media={{ kind: "background", key: "live" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}><MixText text={ctrLabel["vid-live"]} active /></CrtSpan>、{" "}
                 <CrtSpan ctrId="vid-theatrical" media={{ kind: "background", key: "theatrical" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}><MixText text={ctrLabel["vid-theatrical"]} active /></CrtSpan>
-                等等，详情请看我的作品集 <MixText text="PDF" active /> 文件。
+                等都有涉及，详情可直奔作品集<MixText text="PDF" active />/社交账号围观。
               </p>
               <p className="crt-paragraph">
                 总之，相逢即是缘分，这是{" "}
