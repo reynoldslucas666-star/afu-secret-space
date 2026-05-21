@@ -67,10 +67,10 @@ export default function Portfolio() {
 
   const contactDismissGuardUntil = useRef(0);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
+  const ctrVideoRef = useRef<HTMLVideoElement | null>(null);
   const transitionRef = useRef<HTMLVideoElement | null>(null);
   const pendingRef = useRef<PendingTransition | null>(null);
-
-  const isFeatureBg = activeMedia?.kind === "background";
+  const transitionDoneRef = useRef(false);
 
   const applyPending = useCallback((pending: PendingTransition) => {
     if (pending.action === "close") {
@@ -104,10 +104,15 @@ export default function Portfolio() {
   }, []);
 
   const finishTransition = useCallback(() => {
+    if (transitionDoneRef.current) return;
+    transitionDoneRef.current = true;
+
     const pending = pendingRef.current;
+    if (pending?.action === "close") {
+      applyPending(pending);
+    }
     pendingRef.current = null;
     setIsTransitioning(false);
-    if (pending) applyPending(pending);
   }, [applyPending]);
 
   const closeContactImmediate = useCallback(() => {
@@ -130,10 +135,19 @@ export default function Portfolio() {
   const startTransition = useCallback(
     (pending: PendingTransition) => {
       if (isTransitioning) return;
-      pendingRef.current = pending;
+      transitionDoneRef.current = false;
+
+      if (pending.action === "open") {
+        // Mount next clip under the wipe immediately so there is no dead air after transition ends.
+        applyPending(pending);
+      } else {
+        pendingRef.current = pending;
+        setBgSrc(VID.default);
+      }
+
       setIsTransitioning(true);
     },
-    [isTransitioning],
+    [isTransitioning, applyPending],
   );
 
   useEffect(() => {
@@ -145,6 +159,21 @@ export default function Portfolio() {
     el.volume = 1;
     void el.play().catch(() => finishTransition());
   }, [isTransitioning, finishTransition]);
+
+  useEffect(() => {
+    if (!isTransitioning) transitionDoneRef.current = false;
+  }, [isTransitioning]);
+
+  useEffect(() => {
+    if (activeMedia?.kind !== "video") return;
+    const el = ctrVideoRef.current;
+    if (!el) return;
+    el.muted = isTransitioning;
+    if (!isTransitioning) {
+      el.volume = 1;
+      void el.play().catch(() => {});
+    }
+  }, [activeMedia, isTransitioning]);
 
   const handleCtrClick = useCallback(
     (ctrId: string, ch: ChannelIndex, target: CtrMedia | "contact") => {
@@ -240,11 +269,12 @@ export default function Portfolio() {
   }, [useCustomCursor]);
 
   useEffect(() => {
-    if (isTransitioning || activeMedia?.kind === "image" || activeMedia?.kind === "video") return;
+    if (activeMedia?.kind === "image" || activeMedia?.kind === "video") return;
     const el = bgVideoRef.current;
     if (!el) return;
-    el.muted = !isFeatureBg;
-    if (isFeatureBg) {
+    const feature = activeMedia?.kind === "background";
+    el.muted = isTransitioning || !feature;
+    if (feature && !isTransitioning) {
       el.volume = 1;
       try {
         el.currentTime = 0;
@@ -253,65 +283,79 @@ export default function Portfolio() {
       }
     }
     void el.play().catch(() => {});
-  }, [bgSrc, activeMedia, isTransitioning, isFeatureBg]);
+  }, [bgSrc, activeMedia, isTransitioning]);
+
+  const handleTransitionTimeUpdate = useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement>) => {
+      const v = e.currentTarget;
+      if (!v.duration || !Number.isFinite(v.duration)) return;
+      if (v.currentTime >= v.duration - 0.1) finishTransition();
+    },
+    [finishTransition],
+  );
 
   const renderBackgroundLayer = () => {
-    if (activeMedia?.kind === "image") {
-      return (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={activeMedia.src} alt="" className="h-full w-full object-cover" />
-      );
-    }
+    const showCtr = activeMedia?.kind === "video";
+    const showImage = activeMedia?.kind === "image";
+    const feature = activeMedia?.kind === "background";
 
-    if (activeMedia?.kind === "video") {
-      return (
+    return (
+      <>
         <video
-          key={activeMedia.src}
-          className="h-full w-full scale-[1.02] object-cover"
-          src={activeMedia.src}
+          ref={bgVideoRef}
+          className="absolute inset-0 h-full w-full scale-[1.02] object-cover"
+          src={bgSrc}
           autoPlay
-          muted={false}
+          muted={isTransitioning || !feature}
+          loop={!feature}
           playsInline
           preload="auto"
           onLoadedData={(e) => {
             const v = e.currentTarget;
-            v.muted = false;
-            v.volume = 1;
+            v.muted = isTransitioning || !feature;
+            if (feature && !isTransitioning) v.volume = 1;
             void v.play().catch(() => {});
           }}
+          onCanPlay={(e) => {
+            if (feature) void e.currentTarget.play().catch(() => {});
+          }}
+          onEnded={() => {
+            if (feature && !isTransitioning) dismissToDefault();
+          }}
+          onError={() => {
+            setActiveMedia(null);
+            setActiveCtrId(null);
+            setBgSrc(VID.default);
+          }}
         />
-      );
-    }
-
-    return (
-      <video
-        key={bgSrc}
-        ref={bgVideoRef}
-        className="h-full w-full scale-[1.02] object-cover"
-        src={bgSrc}
-        autoPlay
-        muted={!isFeatureBg}
-        loop={!isFeatureBg}
-        playsInline
-        preload="auto"
-        onLoadedData={(e) => {
-          const v = e.currentTarget;
-          v.muted = !isFeatureBg;
-          if (isFeatureBg) v.volume = 1;
-          void v.play().catch(() => {});
-        }}
-        onCanPlay={(e) => {
-          if (isFeatureBg) void e.currentTarget.play().catch(() => {});
-        }}
-        onEnded={() => {
-          if (isFeatureBg && !isTransitioning) dismissToDefault();
-        }}
-        onError={() => {
-          setActiveMedia(null);
-          setActiveCtrId(null);
-          setBgSrc(VID.default);
-        }}
-      />
+        {showCtr && (
+          <video
+            ref={ctrVideoRef}
+            className="absolute inset-0 z-[1] h-full w-full scale-[1.02] object-cover"
+            src={activeMedia.src}
+            autoPlay
+            muted={isTransitioning}
+            playsInline
+            preload="auto"
+            onLoadedData={(e) => {
+              const v = e.currentTarget;
+              v.muted = isTransitioning;
+              if (!isTransitioning) {
+                v.volume = 1;
+                void v.play().catch(() => {});
+              }
+            }}
+          />
+        )}
+        {showImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={activeMedia.src}
+            alt=""
+            className="absolute inset-0 z-[1] h-full w-full object-cover"
+          />
+        )}
+      </>
     );
   };
 
@@ -321,7 +365,7 @@ export default function Portfolio() {
       onClick={handleGlobalClick}
     >
       <div className="pointer-events-none fixed inset-0 z-0">
-        {renderBackgroundLayer()}
+        <div className="relative h-full w-full">{renderBackgroundLayer()}</div>
         <div className="absolute inset-0 bg-black/40" />
       </div>
 
@@ -333,6 +377,7 @@ export default function Portfolio() {
           autoPlay
           playsInline
           preload="auto"
+          onTimeUpdate={handleTransitionTimeUpdate}
           onEnded={finishTransition}
           onError={finishTransition}
         />
