@@ -377,7 +377,7 @@ export default function Portfolio() {
 
   useEffect(() => {
     const tick = () => {
-      setHudTime(new Date().toLocaleString(locale === "zh" ? "zh-CN" : "en-US", {
+      setHudTime(new Date().toLocaleString("en-US", {
         weekday: "short", month: "short", day: "2-digit", year: "numeric",
         hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
       }).toUpperCase());
@@ -385,7 +385,7 @@ export default function Portfolio() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [locale]);
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -543,10 +543,8 @@ export default function Portfolio() {
       <header className="pointer-events-none min-h-0 uppercase tracking-wide text-[var(--text-secondary)] sm:min-h-[min(28vh,14rem)]">
         <div className="pointer-events-auto sticky top-0 z-[6] flex flex-col gap-5 px-[clamp(1rem,5vw,3rem)] pb-3 pt-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8 sm:pb-4 sm:pt-8">
           <nav className="flex flex-1 flex-col gap-4 sm:max-w-[55%]" aria-label="Primary">
-            <ul className="crt-chrome flex list-none flex-col gap-3 font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
-              <li className="normal-case flex items-center after:ml-[0.5ch] after:text-[1.15em] after:content-['▶']">
-                {ui.siteTitle}
-              </li>
+            <ul className="crt-chrome crt-chrome-en flex list-none flex-col gap-3 font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
+              <li className="normal-case">{ui.siteTitle}</li>
               <li className="flex items-center gap-[0.35ch] text-[0.92em] uppercase">
                 <span>{ui.language}:</span>
                 <button
@@ -557,9 +555,7 @@ export default function Portfolio() {
                 >
                   ◀
                 </button>
-                <span className="min-w-[2.5ch] tabular-nums">
-                  <MixText text={ui.langCode} active={locale === "zh"} />
-                </span>
+                <span className="min-w-[2.5ch] tabular-nums">{ui.langCode}</span>
                 <button
                   type="button"
                   aria-label={ui.nextLanguage}
@@ -570,20 +566,8 @@ export default function Portfolio() {
                 </button>
               </li>
             </ul>
-            <ul className="glitchy-text flex list-none flex-col gap-2 sm:flex-row sm:gap-6">
-              <li>
-                <a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#content">
-                  <MixText text={ui.archive} active={locale === "zh"} />
-                </a>
-              </li>
-              <li>
-                <a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#footer">
-                  {ui.directory}
-                </a>
-              </li>
-            </ul>
           </nav>
-          <div className="glitchy-text flex flex-col items-start gap-2 text-right sm:items-end">
+          <div className="crt-chrome-en glitchy-text flex flex-col items-start gap-2 text-right sm:items-end">
             <div className="max-w-[22rem] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">{hudTime}</div>
             <div className="flex items-center gap-[0.35ch] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
               <button
@@ -596,8 +580,7 @@ export default function Portfolio() {
                 ◀
               </button>
               <span className="min-w-[7.5ch] tabular-nums">
-                {ui.channel}{" "}
-                <MixText text={formatChannel(channel)} active={locale === "zh"} />
+                {ui.channel} {formatChannel(channel)}
               </span>
               <button
                 type="button"
@@ -681,16 +664,14 @@ export default function Portfolio() {
         </div>
         <nav
           id="footer"
-          className="crt-directory glitchy-text pointer-events-auto mt-[2.5em] scroll-mt-8 font-[family-name:var(--font-active)] text-[1.1rem] font-normal uppercase leading-[1.35] tracking-[0.02em]"
+          className="crt-directory crt-chrome-en glitchy-text pointer-events-auto mt-[2.5em] scroll-mt-8 font-[family-name:var(--font-active)] text-[1.1rem] font-normal uppercase leading-[1.35] tracking-[0.02em]"
           aria-label="External contact links"
         >
           <ul className="flex list-none flex-col gap-[0.25em]">
             {SOCIAL_LINKS.map(({ label, href }) => (
               <li key={label}>
                 <a
-                  className={`inline-block py-0.5 text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)] hover:opacity-90 ${
-                    locale === "zh" ? "crt-latin" : ""
-                  }`}
+                  className="inline-block py-0.5 text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)] hover:opacity-90"
                   href={href}
                   {...(href.startsWith("mailto:")
                     ? {}

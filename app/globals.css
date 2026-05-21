@@ -133,11 +133,16 @@ body {
   max-width: 100%;
 }
 
-html[data-locale="zh"] .crt-body,
-html[data-locale="zh"] .crt-directory,
-html[data-locale="zh"] .crt-chrome {
+html[data-locale="zh"] .crt-body {
   text-transform: none;
   letter-spacing: 0.04em;
+}
+
+/* Header/footer chrome + social labels: always VT323 English styling. */
+html[data-locale="zh"] .crt-chrome-en {
+  font-family: var(--font-vcr), ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .crt-body p,
