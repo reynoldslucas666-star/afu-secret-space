@@ -114,6 +114,11 @@ body {
   margin-top: 1.15em;
 }
 
+/* Social links sit just below the last bio paragraph (same scale & alignment). */
+.crt-directory {
+  max-width: 100%;
+}
+
 @media (max-width: 480px) {
   :root {
     --font-size-secondary: clamp(18px, 5.4vw, 40px);

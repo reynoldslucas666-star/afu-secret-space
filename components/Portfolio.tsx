@@ -414,7 +414,7 @@ export default function Portfolio() {
         </div>
       </header>
 
-      <main id="content" className="pointer-events-auto mx-auto w-full max-w-[min(80%,72rem)] flex-1 px-[clamp(1rem,5vw,3rem)] pb-12 pt-[clamp(0.5rem,2vh,1.5rem)]">
+      <main id="content" className="pointer-events-auto mx-auto w-full max-w-[min(80%,72rem)] flex-1 px-[clamp(1rem,5vw,3rem)] pb-[clamp(3rem,12vh,6rem)] pt-[clamp(0.5rem,2vh,1.5rem)]">
         <div className="crt-body glitchy-text font-[family-name:var(--font-vcr)] font-normal text-[1.1rem]">
           <p className="crt-paragraph">
             Hi! I&apos;m{" "}
@@ -441,29 +441,28 @@ export default function Portfolio() {
             <CrtSpan ctrId="contact" channel={4} contact onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>open a line</CrtSpan>.
           </p>
         </div>
+        <nav
+          id="footer"
+          className="crt-directory glitchy-text pointer-events-auto mt-[1.5em] scroll-mt-8 font-[family-name:var(--font-vcr)] text-[1.1rem] font-normal uppercase leading-[1.35] tracking-[0.02em]"
+          aria-label="External contact links"
+        >
+          <ul className="flex list-none flex-col gap-[0.5em]">
+            {SOCIAL_LINKS.map(({ label, href }) => (
+              <li key={label}>
+                <a
+                  className="inline-block py-0.5 text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)] hover:opacity-90"
+                  href={href}
+                  {...(href.startsWith("mailto:")
+                    ? {}
+                    : { target: "_blank", rel: "noopener noreferrer" })}
+                >
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </main>
-
-      <footer
-        id="footer"
-        className="pointer-events-auto flex min-h-[min(42vh,20rem)] flex-col justify-end px-[clamp(1rem,5vw,3rem)] pb-10 pt-16 font-[family-name:var(--font-vcr)] uppercase tracking-wide scroll-mt-8"
-        aria-label="External contact links"
-      >
-        <ul className="glitchy-text flex list-none flex-col gap-2 text-[10px] sm:text-xs">
-          {SOCIAL_LINKS.map(({ label, href }) => (
-            <li key={label}>
-              <a
-                className="inline-block min-h-8 py-1 text-[var(--text-secondary)] no-underline hover:text-[var(--text-primary)] hover:opacity-90"
-                href={href}
-                {...(href.startsWith("mailto:")
-                  ? {}
-                  : { target: "_blank", rel: "noopener noreferrer" })}
-              >
-                {label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </footer>
       </div>
 
       <AnimatePresence>
