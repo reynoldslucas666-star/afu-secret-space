@@ -35,16 +35,23 @@ body {
   background: #000;
   color: var(--text-primary);
   font-family: inherit;
-  cursor: auto;
 }
 
-/* Desktop custom cursor: only the JS overlay — hide all native/CSS cursors (avoids double cursor). */
+/* Desktop: hide system cursor everywhere; Portfolio shows the pixel cursor overlay only. */
 @media (hover: hover) and (pointer: fine) {
   html.has-custom-cursor,
   html.has-custom-cursor body,
-  html.has-custom-cursor * {
+  html.has-custom-cursor *,
+  html.has-custom-cursor *::before,
+  html.has-custom-cursor *::after {
     cursor: none !important;
   }
+}
+
+.channel-step-btn {
+  border: none;
+  box-shadow: none;
+  appearance: none;
 }
 
 ::selection {
@@ -194,9 +201,15 @@ body {
   }
 }
 
+html.has-custom-cursor video,
+html.has-custom-cursor img,
+html.has-custom-cursor iframe {
+  cursor: none !important;
+}
+
 .custom-cursor {
   position: fixed;
-  z-index: 10000;
+  z-index: 10001;
   pointer-events: none;
   width: 40px;
   transform: translate3d(-9999px, -9999px, 0);

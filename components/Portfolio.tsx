@@ -84,12 +84,20 @@ const CTR_TUNER = [
   target: CtrMedia | "contact";
 }>;
 
-const TUNER_CHANNEL_MAX = CTR_TUNER.length;
+const MEDIA_CHANNEL_MAX = 9;
+const CONTACT_CHANNEL = 10;
 
-function wrapChannel(n: number): ChannelIndex {
-  if (n < 1) return TUNER_CHANNEL_MAX as ChannelIndex;
-  if (n > TUNER_CHANNEL_MAX) return 1;
-  return n as ChannelIndex;
+/** Forward: 01→…→09→10 (contact)→01. Back: never 01→10; 01→09, 10→09. */
+function channelAfterStep(current: number, delta: -1 | 1): ChannelIndex {
+  if (delta === 1) {
+    if (current === 0) return 1;
+    if (current >= CONTACT_CHANNEL) return 1;
+    return (current + 1) as ChannelIndex;
+  }
+  if (current === 0) return MEDIA_CHANNEL_MAX as ChannelIndex;
+  if (current === 1) return MEDIA_CHANNEL_MAX as ChannelIndex;
+  if (current === CONTACT_CHANNEL) return MEDIA_CHANNEL_MAX as ChannelIndex;
+  return (current - 1) as ChannelIndex;
 }
 
 function tunerEntryForChannel(ch: ChannelIndex) {
@@ -282,9 +290,8 @@ export default function Portfolio() {
     (delta: -1 | 1) => {
       if (isTransitioning) return;
 
-      const current =
-        contactOpen ? 10 : channel > 0 ? channel : delta === 1 ? 0 : TUNER_CHANNEL_MAX + 1;
-      const next = wrapChannel(current + delta);
+      const current = contactOpen ? CONTACT_CHANNEL : channel > 0 ? channel : 0;
+      const next = channelAfterStep(current, delta);
       const entry = tunerEntryForChannel(next);
       if (!entry) return;
 
@@ -322,16 +329,18 @@ export default function Portfolio() {
 
   useEffect(() => {
     const media = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const update = () => setUseCustomCursor(media.matches);
+    const update = () => {
+      const on = media.matches;
+      setUseCustomCursor(on);
+      document.documentElement.classList.toggle("has-custom-cursor", on);
+    };
     update();
     media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
+    return () => {
+      media.removeEventListener("change", update);
+      document.documentElement.classList.remove("has-custom-cursor");
+    };
   }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("has-custom-cursor", useCustomCursor);
-    return () => document.documentElement.classList.remove("has-custom-cursor");
-  }, [useCustomCursor]);
 
   useEffect(() => {
     if (!useCustomCursor) return;
@@ -341,7 +350,7 @@ export default function Portfolio() {
       setCursorState({ x: e.clientX, y: e.clientY, visible: true, interactive });
     };
     const onLeave = () => setCursorState((prev) => ({ ...prev, visible: false }));
-    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mousemove", onMove, { passive: true });
     document.addEventListener("mouseleave", onLeave);
     return () => {
       window.removeEventListener("mousemove", onMove);
@@ -442,7 +451,9 @@ export default function Portfolio() {
 
   return (
     <div
-      className="relative min-h-dvh w-full overflow-x-hidden bg-black text-[var(--text-primary)] selection:bg-white selection:text-black"
+      className={`relative min-h-dvh w-full overflow-x-hidden bg-black text-[var(--text-primary)] selection:bg-white selection:text-black ${
+        useCustomCursor ? "cursor-none" : ""
+      }`}
       onClick={handleGlobalClick}
     >
       <div className="pointer-events-none fixed inset-0 z-0">
@@ -482,12 +493,12 @@ export default function Portfolio() {
           </nav>
           <div className="glitchy-text flex flex-col items-start gap-2 text-right sm:items-end">
             <div className="max-w-[22rem] font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">{hudTime}</div>
-            <div className="flex items-center gap-2 font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">
+            <div className="flex items-center gap-[0.35ch] font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">
               <button
                 type="button"
                 aria-label="Previous channel"
                 disabled={isTransitioning}
-                className="channel-step-btn flex h-8 min-w-8 items-center justify-center border border-[var(--text-secondary)]/50 bg-black/30 px-1 text-sm leading-none text-[var(--text-secondary)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] disabled:opacity-40"
+                className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40"
                 onClick={() => stepChannel(-1)}
               >
                 ◀
@@ -497,7 +508,7 @@ export default function Portfolio() {
                 type="button"
                 aria-label="Next channel"
                 disabled={isTransitioning}
-                className="channel-step-btn flex h-8 min-w-8 items-center justify-center border border-[var(--text-secondary)]/50 bg-black/30 px-1 text-sm leading-none text-[var(--text-secondary)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] disabled:opacity-40"
+                className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-40"
                 onClick={() => stepChannel(1)}
               >
                 ▶
@@ -571,42 +582,33 @@ export default function Portfolio() {
             }}
           >
             <motion.div
-              className="mx-auto w-[min(92vw,280px)] border-2 border-gray-400 bg-[#c0c0c0] p-0 font-[family-name:var(--font-vcr)] text-black shadow-[4px_4px_0_#000]"
+              className="mx-auto w-[min(92vw,440px)] border-2 border-gray-400 bg-[#c0c0c0] p-0 font-[family-name:var(--font-vcr)] text-black shadow-[4px_4px_0_#000]"
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-stretch bg-blue-800 text-xs text-white">
-                <span className="flex min-h-10 flex-1 items-center px-2 py-1 leading-tight">
-                  COMMUNICATION.PROTOCOL
-                </span>
+              <div className="flex min-h-10 items-stretch justify-between gap-2 bg-blue-800 px-2 py-1 text-xs text-white">
+                <span className="flex flex-1 items-center leading-tight">COMMUNICATION.PROTOCOL</span>
                 <button
                   type="button"
                   aria-label="Close contact window"
-                  className="flex min-h-10 min-w-12 shrink-0 items-center justify-center border-l border-blue-900/60 px-3 text-xl leading-none hover:bg-blue-900 active:bg-blue-950"
+                  className="flex h-8 min-w-10 shrink-0 items-center justify-center px-2 text-xl leading-none hover:bg-blue-900 active:bg-blue-950"
                   onClick={() => dismissContact(true)}
                 >
                   ×
                 </button>
               </div>
-              <div className="flex flex-col items-center gap-3 p-3">
-                <div className="w-full overflow-hidden border border-gray-600 bg-white aspect-[3/4]">
+              <div className="flex flex-col items-center gap-4 p-4">
+                <div className="flex w-full justify-center border border-gray-600 bg-white p-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={IMG.contact}
                     alt="Contact"
-                    className="mx-auto block h-full w-full object-cover object-[50%_42%]"
+                    className="mx-auto block max-h-[min(58vh,480px)] w-full object-contain"
                   />
                 </div>
-                <button
-                  type="button"
-                  className="min-h-10 w-full border border-gray-500 bg-[#d4d4d4] px-3 py-2 text-center text-[10px] uppercase leading-tight hover:bg-[#e8e8e8] active:bg-white"
-                  onClick={() => dismissContact(true)}
-                >
-                  Close window
-                </button>
-                <p className="text-center text-[10px] uppercase leading-tight text-black/70">
-                  Or click the dark area outside to dismiss
+                <p className="w-full text-center text-sm uppercase tracking-wide text-black sm:text-base">
+                  Add Afu&apos;s WeChat
                 </p>
               </div>
             </motion.div>
@@ -614,12 +616,13 @@ export default function Portfolio() {
         )}
       </AnimatePresence>
 
-      {useCustomCursor && cursorState.visible && (
+      {useCustomCursor && (
         <div
-          className={`custom-cursor pointer-events-none fixed left-0 top-0 z-[999] ${
+          className={`custom-cursor pointer-events-none fixed left-0 top-0 z-[10001] ${
             cursorState.interactive ? "is-interactive" : ""
           }`}
           style={{
+            opacity: cursorState.visible ? 1 : 0,
             transform: `translate3d(${cursorState.x - (cursorState.interactive ? 17 : 2)}px, ${
               cursorState.y - (cursorState.interactive ? 9 : 2)
             }px, 0)`,
