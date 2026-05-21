@@ -443,10 +443,10 @@ export default function Portfolio() {
         </div>
         <nav
           id="footer"
-          className="crt-directory glitchy-text pointer-events-auto mt-[1.5em] scroll-mt-8 font-[family-name:var(--font-vcr)] text-[1.1rem] font-normal uppercase leading-[1.35] tracking-[0.02em]"
+          className="crt-directory glitchy-text pointer-events-auto mt-[2.5em] scroll-mt-8 font-[family-name:var(--font-vcr)] text-[1.1rem] font-normal uppercase leading-[1.35] tracking-[0.02em]"
           aria-label="External contact links"
         >
-          <ul className="flex list-none flex-col gap-[0.5em]">
+          <ul className="flex list-none flex-col gap-[0.25em]">
             {SOCIAL_LINKS.map(({ label, href }) => (
               <li key={label}>
                 <a
