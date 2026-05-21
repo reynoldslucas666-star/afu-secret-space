@@ -10,12 +10,12 @@ import {
 
 /** Contact modal only — still PNG. */
 const IMG = {
-  liunengfu: "/assets/images/liunengfu.png",
   contact: "/assets/images/lianxifangshi.png",
 } as const;
 
 /** CTR fullscreen clips (from afu-archive-assets/images/*.mp4). */
 const CTR_VID = {
+  liunengfu: "/assets/video/liunengfu.mp4",
   aigcIntern: "/assets/video/AIGCshixi.mp4",
   yanchu: "/assets/video/yanchu.mp4",
   dianying: "/assets/video/dianying.mp4",
@@ -124,6 +124,8 @@ export default function Portfolio() {
     const el = transitionRef.current;
     if (!el) return;
     el.currentTime = 0;
+    el.muted = false;
+    el.volume = 1;
     void el.play().catch(() => finishTransition());
   }, [isTransitioning, finishTransition]);
 
@@ -239,6 +241,7 @@ export default function Portfolio() {
           className="h-full w-full scale-[1.02] object-cover"
           src={activeMedia.src}
           autoPlay
+          muted={false}
           playsInline
           preload="auto"
           onLoadedData={(e) => {
@@ -299,7 +302,6 @@ export default function Portfolio() {
           className="pointer-events-none fixed inset-0 z-[1] h-full w-full scale-[1.02] object-cover"
           src={TRANSITION}
           autoPlay
-          muted
           playsInline
           preload="auto"
           onEnded={finishTransition}
@@ -335,7 +337,7 @@ export default function Portfolio() {
         <div className="crt-body glitchy-text font-[family-name:var(--font-vcr)] font-normal text-[1.1rem]">
           <p className="crt-paragraph">
             Hi! I&apos;m{" "}
-            <CrtSpan ctrId="name" channel={1} media={{ kind: "image", src: IMG.liunengfu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>Liu Nengfu</CrtSpan>
+            <CrtSpan ctrId="name" channel={1} media={{ kind: "video", src: CTR_VID.liunengfu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>Liu Nengfu</CrtSpan>
             —you can call me Afu. I&apos;m at the Beijing Film Academy, currently{" "}
             <CrtSpan ctrId="aigc-intern" channel={1} media={{ kind: "video", src: CTR_VID.aigcIntern }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>interning on the AIGC product side</CrtSpan>
             , and a filmmaker who thinks in shots, not bullet points.
