@@ -44,7 +44,27 @@ const SOCIAL_LINKS = [
 ] as const;
 
 type VideoKey = keyof typeof VID;
-type ChannelIndex = 1 | 2 | 3 | 4;
+
+/** One CHANNEL per CTR keyword, in order of appearance in the bio copy. */
+const CTR_CHANNEL_BY_ID = {
+  name: 1,
+  "aigc-intern": 2,
+  "live-music": 3,
+  films: 4,
+  exhibitions: 5,
+  travel: 6,
+  "vid-aigc": 7,
+  "vid-live": 8,
+  "vid-theatrical": 9,
+  contact: 10,
+} as const;
+
+type CtrId = keyof typeof CTR_CHANNEL_BY_ID;
+type ChannelIndex = (typeof CTR_CHANNEL_BY_ID)[CtrId];
+
+function channelForCtr(ctrId: string): ChannelIndex {
+  return CTR_CHANNEL_BY_ID[ctrId as CtrId] ?? 1;
+}
 
 /** CTR target: image, fullscreen video (replaces png), or background feature reel. */
 export type CtrMedia =
@@ -418,27 +438,27 @@ export default function Portfolio() {
         <div className="crt-body glitchy-text font-[family-name:var(--font-vcr)] font-normal text-[1.1rem]">
           <p className="crt-paragraph">
             Hi! I&apos;m{" "}
-            <CrtSpan ctrId="name" channel={1} media={{ kind: "video", src: CTR_VID.liunengfu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>Liu Nengfu</CrtSpan>
+            <CrtSpan ctrId="name" media={{ kind: "video", src: CTR_VID.liunengfu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>Liu Nengfu</CrtSpan>
             —you can call me Afu. I&apos;m at the Beijing Film Academy, currently{" "}
-            <CrtSpan ctrId="aigc-intern" channel={1} media={{ kind: "video", src: CTR_VID.aigcIntern }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>interning on the AIGC product side</CrtSpan>
+            <CrtSpan ctrId="aigc-intern" media={{ kind: "video", src: CTR_VID.aigcIntern }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>interning on the AIGC product side</CrtSpan>
             , and a filmmaker who thinks in shots, not bullet points.
           </p>
           <p className="crt-paragraph">
             Off campus I orbit{" "}
-            <CrtSpan ctrId="live-music" channel={2} media={{ kind: "video", src: CTR_VID.yanchu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>live sets and room acoustics</CrtSpan>,{" "}
-            <CrtSpan ctrId="films" channel={2} media={{ kind: "video", src: CTR_VID.dianying }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>films wherever they screen</CrtSpan>,{" "}
-            <CrtSpan ctrId="exhibitions" channel={2} media={{ kind: "video", src: CTR_VID.zhanlan }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>exhibitions with sharp lighting</CrtSpan>, and{" "}
-            <CrtSpan ctrId="travel" channel={2} media={{ kind: "video", src: CTR_VID.lvxing }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>travel that wanders on purpose</CrtSpan>.
+            <CrtSpan ctrId="live-music" media={{ kind: "video", src: CTR_VID.yanchu }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>live sets and room acoustics</CrtSpan>,{" "}
+            <CrtSpan ctrId="films" media={{ kind: "video", src: CTR_VID.dianying }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>films wherever they screen</CrtSpan>,{" "}
+            <CrtSpan ctrId="exhibitions" media={{ kind: "video", src: CTR_VID.zhanlan }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>exhibitions with sharp lighting</CrtSpan>, and{" "}
+            <CrtSpan ctrId="travel" media={{ kind: "video", src: CTR_VID.lvxing }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>travel that wanders on purpose</CrtSpan>.
           </p>
           <p className="crt-paragraph">
             I cut and ship video—work spans{" "}
-            <CrtSpan ctrId="vid-aigc" channel={3} media={{ kind: "background", key: "aigc" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>AIGC-generated video</CrtSpan>,{" "}
-            <CrtSpan ctrId="vid-live" channel={3} media={{ kind: "background", key: "live" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>live-action</CrtSpan>, and{" "}
-            <CrtSpan ctrId="vid-theatrical" channel={3} media={{ kind: "background", key: "theatrical" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>theatrical campaigns</CrtSpan>.
+            <CrtSpan ctrId="vid-aigc" media={{ kind: "background", key: "aigc" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>AIGC-generated video</CrtSpan>,{" "}
+            <CrtSpan ctrId="vid-live" media={{ kind: "background", key: "live" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>live-action</CrtSpan>, and{" "}
+            <CrtSpan ctrId="vid-theatrical" media={{ kind: "background", key: "theatrical" }} onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>theatrical campaigns</CrtSpan>.
           </p>
           <p className="crt-paragraph">
             I love this line of work. If the frequency matches,{" "}
-            <CrtSpan ctrId="contact" channel={4} contact onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>open a line</CrtSpan>.
+            <CrtSpan ctrId="contact" contact onCtrClick={handleCtrClick} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel} isTransitioning={isTransitioning}>open a line</CrtSpan>.
           </p>
         </div>
         <nav
@@ -543,7 +563,6 @@ export default function Portfolio() {
 function CrtSpan({
   children,
   ctrId,
-  channel,
   media,
   contact,
   onCtrClick,
@@ -552,8 +571,7 @@ function CrtSpan({
   isTransitioning,
 }: {
   children: React.ReactNode;
-  ctrId: string;
-  channel: ChannelIndex;
+  ctrId: CtrId;
   media?: CtrMedia;
   contact?: boolean;
   onCtrClick: (ctrId: string, ch: ChannelIndex, target: CtrMedia | "contact") => void;
@@ -562,6 +580,7 @@ function CrtSpan({
   isTransitioning: boolean;
 }) {
   const interactive = Boolean(media || contact);
+  const channel = channelForCtr(ctrId);
 
   const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
