@@ -31,6 +31,11 @@ const CURSOR_DEFAULT = "/assets/images/cursor-default.png";
 const CURSOR_POINTER = "/assets/images/cursor-pointer.png";
 
 type VideoKey = keyof typeof VID;
+type ChannelIndex = 1 | 2 | 3 | 4;
+
+function formatChannel(n: number) {
+  return String(n).padStart(2, "0");
+}
 
 export default function Portfolio() {
   const [bgSrc, setBgSrc] = useState<string>(VID.default);
@@ -40,35 +45,53 @@ export default function Portfolio() {
   const [hudTime, setHudTime] = useState("");
   const [useCustomCursor, setUseCustomCursor] = useState(false);
   const [cursorState, setCursorState] = useState({ x: 0, y: 0, visible: false, interactive: false });
+  const [channel, setChannel] = useState(0);
 
   const contactDismissGuardUntil = useRef(0);
   const bgVideoRef = useRef<HTMLVideoElement | null>(null);
 
-  const toggleImageFullscreen = useCallback((src: string) => {
-    setActiveImage((prev) => (prev === src ? null : src));
+  const toggleImageFullscreen = useCallback((src: string, ch: ChannelIndex) => {
+    setActiveImage((prev) => {
+      const next = prev === src ? null : src;
+      setChannel(next ? ch : 0);
+      return next;
+    });
     setActiveVideo(null);
   }, []);
 
   const openContact = useCallback(() => {
     contactDismissGuardUntil.current = Date.now() + 500;
     setContactOpen(true);
+    setChannel(4);
   }, []);
 
   const dismissContact = useCallback((force: boolean) => {
     if (!force && Date.now() < contactDismissGuardUntil.current) return;
     setContactOpen(false);
+    setChannel(0);
   }, []);
 
-  const switchVideo = useCallback((key: Exclude<VideoKey, "default">) => {
+  const switchVideo = useCallback((key: Exclude<VideoKey, "default">, ch: ChannelIndex) => {
     setActiveImage(null);
     setBgSrc(VID[key]);
     setActiveVideo(key);
+    setChannel(ch);
   }, []);
 
   const backToDefaultVideo = useCallback(() => {
     setActiveVideo(null);
     setBgSrc(VID.default);
+    setChannel(0);
   }, []);
+
+  const previewChannel = useCallback((ch: ChannelIndex) => {
+    setChannel(ch);
+  }, []);
+
+  const clearPreviewChannel = useCallback(() => {
+    if (activeImage || activeVideo || contactOpen) return;
+    setChannel(0);
+  }, [activeImage, activeVideo, contactOpen]);
 
   const handleGlobalClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only clicks on the page backdrop should reset preview/video.
@@ -76,7 +99,10 @@ export default function Portfolio() {
     if (activeVideo) {
       backToDefaultVideo();
     }
-    if (activeImage) setActiveImage(null);
+    if (activeImage) {
+      setActiveImage(null);
+      setChannel(0);
+    }
   };
 
   useEffect(() => {
@@ -186,46 +212,46 @@ export default function Portfolio() {
             <ul className="flex list-none items-center gap-0 font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">
               <li className="normal-case flex items-center after:ml-[0.5ch] after:text-[1.15em] after:content-['▶']">{"Afu's secret space"}</li>
             </ul>
-            <ul className="flex list-none flex-col gap-2 sm:flex-row sm:gap-6">
+            <ul className="glitchy-text flex list-none flex-col gap-2 sm:flex-row sm:gap-6">
               <li><a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#content">ARCHIVE_01</a></li>
               <li><a className="text-[var(--text-secondary)] no-underline hover:opacity-80" href="#footer">DIRECTORY</a></li>
             </ul>
           </nav>
-          <div className="flex flex-col items-start gap-2 text-right sm:items-end">
+          <div className="glitchy-text flex flex-col items-start gap-2 text-right sm:items-end">
             <div className="max-w-[22rem] font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">{hudTime}</div>
             <div className="flex items-center gap-2 font-[family-name:var(--font-vcr)] text-[var(--text-secondary)]">
-              <span>CHANNEL {activeVideo ? "01" : "00"}</span>
+              <span>CHANNEL {formatChannel(channel)}</span>
             </div>
           </div>
         </div>
       </header>
 
       <main id="content" className="pointer-events-auto relative z-[5] mx-auto w-full max-w-[min(80%,72rem)] px-[clamp(1rem,5vw,3rem)] pb-28 pt-[clamp(0.5rem,2vh,1.5rem)]">
-        <div className="crt-body glitchy-text space-y-[0.85em] font-[family-name:var(--font-vcr)] font-normal text-[1.1rem]">
-          <div className="m-0">
+        <div className="crt-body glitchy-text font-[family-name:var(--font-vcr)] font-normal text-[1.1rem]">
+          <p className="crt-paragraph">
             Hi! I&apos;m{" "}
-            <CrtSpan img={IMG.liunengfu} onImage={toggleImageFullscreen}>Liu Nengfu</CrtSpan>
+            <CrtSpan channel={1} img={IMG.liunengfu} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>Liu Nengfu</CrtSpan>
             —you can call me Afu. I&apos;m at the Beijing Film Academy, currently{" "}
-            <CrtSpan img={IMG.aigcIntern} onImage={toggleImageFullscreen}>interning on the AIGC product side</CrtSpan>
+            <CrtSpan channel={1} img={IMG.aigcIntern} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>interning on the AIGC product side</CrtSpan>
             , and a filmmaker who thinks in shots, not bullet points.
-          </div>
-          <div className="m-0">
+          </p>
+          <p className="crt-paragraph">
             Off campus I orbit{" "}
-            <CrtSpan img={IMG.yanchu} onImage={toggleImageFullscreen}>live sets and room acoustics</CrtSpan>,{" "}
-            <CrtSpan img={IMG.dianying} onImage={toggleImageFullscreen}>films wherever they screen</CrtSpan>,{" "}
-            <CrtSpan img={IMG.zhanlan} onImage={toggleImageFullscreen}>exhibitions with sharp lighting</CrtSpan>, and{" "}
-            <CrtSpan img={IMG.lvxing} onImage={toggleImageFullscreen}>travel that wanders on purpose</CrtSpan>.
-          </div>
-          <div className="m-0">
+            <CrtSpan channel={2} img={IMG.yanchu} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>live sets and room acoustics</CrtSpan>,{" "}
+            <CrtSpan channel={2} img={IMG.dianying} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>films wherever they screen</CrtSpan>,{" "}
+            <CrtSpan channel={2} img={IMG.zhanlan} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>exhibitions with sharp lighting</CrtSpan>, and{" "}
+            <CrtSpan channel={2} img={IMG.lvxing} onImage={toggleImageFullscreen} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>travel that wanders on purpose</CrtSpan>.
+          </p>
+          <p className="crt-paragraph">
             I cut and ship video—work spans{" "}
-            <CrtSpan video="aigc" onVideo={switchVideo}>AIGC-generated video</CrtSpan>,{" "}
-            <CrtSpan video="live" onVideo={switchVideo}>live-action</CrtSpan>, and{" "}
-            <CrtSpan video="theatrical" onVideo={switchVideo}>theatrical campaigns</CrtSpan>.
-          </div>
-          <div className="m-0">
+            <CrtSpan channel={3} video="aigc" onVideo={switchVideo} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>AIGC-generated video</CrtSpan>,{" "}
+            <CrtSpan channel={3} video="live" onVideo={switchVideo} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>live-action</CrtSpan>, and{" "}
+            <CrtSpan channel={3} video="theatrical" onVideo={switchVideo} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>theatrical campaigns</CrtSpan>.
+          </p>
+          <p className="crt-paragraph">
             I love this line of work. If the frequency matches,{" "}
-            <CrtSpan onContact={openContact}>open a line</CrtSpan>.
-          </div>
+            <CrtSpan channel={4} onContact={openContact} onChannelPreview={previewChannel} onChannelClear={clearPreviewChannel}>open a line</CrtSpan>.
+          </p>
         </div>
       </main>
 
@@ -265,8 +291,8 @@ export default function Portfolio() {
         <div
           className="custom-cursor pointer-events-none fixed left-0 top-0 z-[999]"
           style={{
-            transform: `translate3d(${cursorState.x - (cursorState.interactive ? 16 : 2)}px, ${
-              cursorState.y - (cursorState.interactive ? 8 : 2)
+            transform: `translate3d(${cursorState.x - (cursorState.interactive ? 18 : 2)}px, ${
+              cursorState.y - (cursorState.interactive ? 9 : 2)
             }px, 0)`,
           }}
         >
@@ -279,21 +305,32 @@ export default function Portfolio() {
 }
 
 function CrtSpan({
-  children, img, video, onImage, onVideo, onContact,
+  children,
+  channel,
+  img,
+  video,
+  onImage,
+  onVideo,
+  onContact,
+  onChannelPreview,
+  onChannelClear,
 }: {
   children: React.ReactNode;
+  channel: ChannelIndex;
   img?: string;
   video?: Exclude<VideoKey, "default">;
-  onImage?: (src: string) => void;
-  onVideo?: (k: Exclude<VideoKey, "default">) => void;
+  onImage?: (src: string, ch: ChannelIndex) => void;
+  onVideo?: (k: Exclude<VideoKey, "default">, ch: ChannelIndex) => void;
   onContact?: () => void;
+  onChannelPreview?: (ch: ChannelIndex) => void;
+  onChannelClear?: () => void;
 }) {
   const interactive = Boolean(img || video || onContact);
 
   const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    if (video && onVideo) onVideo(video);
-    if (img && onImage) onImage(img);
+    if (video && onVideo) onVideo(video, channel);
+    if (img && onImage) onImage(img, channel);
     if (onContact) onContact();
   };
 
@@ -304,9 +341,13 @@ function CrtSpan({
       type="button"
       className="crt-keyword group relative inline-block cursor-pointer underline decoration-dotted decoration-white/40 underline-offset-4 text-[var(--text-secondary)]"
       onClick={onClick}
+      onMouseEnter={() => onChannelPreview?.(channel)}
+      onMouseLeave={() => onChannelClear?.()}
+      onFocus={() => onChannelPreview?.(channel)}
+      onBlur={() => onChannelClear?.()}
     >
       <span className="crt-keyword-bars-wrap pointer-events-none absolute inset-[-2px_-4px] z-0 overflow-hidden opacity-0 transition-opacity duration-75 group-hover:opacity-100 group-focus-visible:opacity-100">
-        <video className="h-full w-full scale-150 object-cover" autoPlay muted playsInline loop>
+        <video className="crt-keyword-bars-video h-full w-full scale-150 object-cover" autoPlay muted playsInline loop>
           <source src={GLITCH_BARS_MP4} type="video/mp4" />
           <source src={GLITCH_BARS_MOV} type="video/quicktime" />
         </video>

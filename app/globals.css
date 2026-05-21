@@ -103,13 +103,17 @@ button,
 }
 
 .crt-body p,
-.crt-body [role="paragraph"] {
+.crt-body .crt-paragraph {
   margin: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
   word-break: normal;
   text-wrap: pretty;
   hyphens: manual;
+}
+
+.crt-body .crt-paragraph + .crt-paragraph {
+  margin-top: 1.15em;
 }
 
 @media (max-width: 480px) {
@@ -159,7 +163,7 @@ button,
 /* 关键词背后彩条：真实视频（mp4/mov），在 `.crt-keyword` 内、文字下层 */
 .crt-keyword-bars-video {
   mix-blend-mode: screen;
-  filter: brightness(0.5) saturate(1.25) contrast(1.18);
+  filter: brightness(0.4) saturate(1.25) contrast(1.18);
   animation: bars-jitter 0.08s steps(2) infinite;
 }
 
@@ -191,11 +195,17 @@ button,
   position: fixed;
   z-index: 10000;
   pointer-events: none;
-  width: 40px;
+  width: 45px;
   transform: translate3d(-9999px, -9999px, 0);
   will-change: transform;
 }
 
+.custom-cursor img {
+  width: 45px;
+  height: auto;
+  display: block;
+}
+
 .custom-cursor.is-interactive {
-  width: 40px;
+  width: 45px;
 }
