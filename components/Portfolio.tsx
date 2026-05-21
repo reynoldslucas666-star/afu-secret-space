@@ -368,8 +368,8 @@ export default function Portfolio() {
     }
   }, [locale]);
 
-  const stepLocale = useCallback((delta: -1 | 1) => {
-    setLocale((prev) => nextLocale(prev, delta));
+  const toggleLocale = useCallback(() => {
+    setLocale((prev) => nextLocale(prev, 1));
   }, []);
 
   const ui = UI[locale];
@@ -544,6 +544,7 @@ export default function Portfolio() {
         <div className="pointer-events-auto sticky top-0 z-[6] flex flex-col gap-3 px-[clamp(0.5rem,2.5vw,1.5rem)] pb-2 pt-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:pb-2 sm:pt-4">
           <nav className="flex flex-1 flex-col gap-2 sm:max-w-[55%]" aria-label="Primary">
             <ul className="crt-chrome crt-chrome-en flex list-none flex-col gap-2 font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
+              <li className="normal-case">{ui.welcomeTo}</li>
               <li className="normal-case">{ui.siteTitle}</li>
             </ul>
             <ul className="crt-chrome-en glitchy-text flex list-none flex-col gap-2 sm:flex-row sm:gap-6">
@@ -561,26 +562,14 @@ export default function Portfolio() {
           </nav>
           <div className="crt-chrome-en glitchy-text flex flex-col items-start gap-2 text-right sm:items-end">
             <div className="max-w-[22rem] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">{hudTime}</div>
-            <div className="flex items-center gap-[0.35ch] text-[0.92em] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
-              <span>{ui.language}:</span>
-              <button
-                type="button"
-                aria-label={ui.prevLanguage}
-                className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none hover:text-[var(--text-primary)]"
-                onClick={() => stepLocale(-1)}
-              >
-                ◀
-              </button>
-              <span className="min-w-[2.5ch] tabular-nums">{ui.langCode}</span>
-              <button
-                type="button"
-                aria-label={ui.nextLanguage}
-                className="channel-step-btn min-h-8 min-w-8 bg-transparent p-0 text-[1.15em] leading-none hover:text-[var(--text-primary)]"
-                onClick={() => stepLocale(1)}
-              >
-                ▶
-              </button>
-            </div>
+            <button
+              type="button"
+              aria-label={ui.toggleLanguage}
+              className="channel-step-btn min-h-8 bg-transparent p-0 text-left text-[0.92em] uppercase leading-none text-[var(--text-secondary)] underline decoration-dotted decoration-white/30 underline-offset-4 hover:text-[var(--text-primary)] hover:opacity-90"
+              onClick={toggleLocale}
+            >
+              {ui.language}: {ui.langCode}
+            </button>
             <div className="flex items-center gap-[0.35ch] font-[family-name:var(--font-active)] text-[var(--text-secondary)]">
               <button
                 type="button"
